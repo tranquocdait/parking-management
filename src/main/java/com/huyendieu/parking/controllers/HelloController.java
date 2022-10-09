@@ -10,13 +10,13 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.huyendieu.parking.entities.TestEntity;
-import com.huyendieu.parking.repositories.ITestRepository;
+import com.huyendieu.parking.repositories.TestRepository;
 
 @RestController
 public class HelloController {
 
     @Autowired
-    private ITestRepository _testRepository;
+    private TestRepository _testRepository;
 
     @RequestMapping(value = "/getAll", method = RequestMethod.GET)
     public ResponseEntity<List<TestEntity>> custom() {
