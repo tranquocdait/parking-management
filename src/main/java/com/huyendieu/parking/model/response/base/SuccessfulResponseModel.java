@@ -1,4 +1,4 @@
-package com.huyendieu.parking.model.response;
+package com.huyendieu.parking.model.response.base;
 
 import lombok.Data;
 import org.springframework.http.HttpStatus;

@@ -3,7 +3,7 @@ package com.huyendieu.parking.services.impl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.huyendieu.parking.constants.PermissionConstant;
 import com.huyendieu.parking.entities.UserEntity;
-import com.huyendieu.parking.model.response.SuccessfulResponseModel;
+import com.huyendieu.parking.model.response.base.SuccessfulResponseModel;
 import com.huyendieu.parking.repositories.UserRepository;
 import com.huyendieu.parking.services.TokenAuthenticationService;
 import io.jsonwebtoken.Jwts;

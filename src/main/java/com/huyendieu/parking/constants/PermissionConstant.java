@@ -9,7 +9,7 @@ public class PermissionConstant {
     public enum RoleCode {
 
         ADMIN(1, "ADMIN", "ROLE_ADMIN", "Admin"),
-        PARKING_OWNER(2, "PARKING_OWNER", "ROLE_PARKING_OWNER", "parking owner"),
+        PARKING_OWNER(2, "PARKING_OWNER", "ROLE_PARKING_OWNER", "Parking owner"),
         VEHICLE_OWNER(3,"VEHICLE_OWNER", "ROLE_PARKING_OWNER","Vehicle owner");
 
         private final Integer key;

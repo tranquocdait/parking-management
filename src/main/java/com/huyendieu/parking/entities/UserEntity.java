@@ -18,7 +18,7 @@ import javax.validation.constraints.Size;
 public class UserEntity extends BaseEntity {
 
     @Id
-    private ObjectId userID;
+    private ObjectId id;
 
     @Size(min = 2)
     @Field(name = "user_name")

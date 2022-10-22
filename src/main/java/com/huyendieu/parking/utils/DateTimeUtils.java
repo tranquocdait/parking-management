@@ -1,11 +1,9 @@
 package com.huyendieu.parking.utils;
 
-import com.huyendieu.parking.constants.Constant;
-
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-public class DateTimeUntil {
+public class DateTimeUtils {
 
     public static String convertDateTimeFormat(String datetime, String formatFrom, String formatTo) {
         DateTimeFormatter formatterFrom = DateTimeFormatter.ofPattern(formatFrom);
@@ -14,6 +12,13 @@ public class DateTimeUntil {
         // desired output format
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern(formatTo);
         return localDateTime.format(formatter);
+    }
+
+    public static String convertDateTimeFormat(LocalDateTime datetime, String formatTo) {
+
+        // desired output format
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(formatTo);
+        return datetime.format(formatter);
     }
 
 
