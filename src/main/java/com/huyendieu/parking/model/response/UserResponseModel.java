@@ -26,8 +26,8 @@ public class UserResponseModel {
     @JsonProperty("phone_number")
     private String phoneNumber;
 
-    @JsonProperty("is_vehicle_owner")
-    private boolean vehicleOwner;
+    @JsonProperty("role_code")
+    private String roleCode;
 
     @JsonProperty("vehicles")
     List<VehicleResponseModel> vehicles;

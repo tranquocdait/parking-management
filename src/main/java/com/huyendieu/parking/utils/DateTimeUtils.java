@@ -1,5 +1,8 @@
 package com.huyendieu.parking.utils;
 
+import com.huyendieu.parking.constants.Constant;
+
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -21,5 +24,13 @@ public class DateTimeUtils {
         return datetime.format(formatter);
     }
 
+    public static String convertDateFormat(String date, String formatFrom, String formatTo) {
+        DateTimeFormatter formatterFrom = DateTimeFormatter.ofPattern(formatFrom);
+        LocalDate localDateTime = LocalDate.parse(date, formatterFrom);
+
+        // desired output format
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(formatTo);
+        return localDateTime.format(formatter);
+    }
 
 }

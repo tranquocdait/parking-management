@@ -6,6 +6,7 @@ import com.huyendieu.parking.entities.ParkingAreaEntity;
 import com.huyendieu.parking.entities.RoleUserEntity;
 import com.huyendieu.parking.entities.UserEntity;
 import com.huyendieu.parking.entities.VehicleEntity;
+import com.huyendieu.parking.exception.ParkingException;
 import com.huyendieu.parking.model.request.SignUpRequestModel;
 import com.huyendieu.parking.model.response.ParkingAreaResponseModel;
 import com.huyendieu.parking.model.response.UserResponseModel;
@@ -49,7 +50,7 @@ public class UserServiceImpl extends BaseService implements UserService {
 
     @Override
     @Transactional(rollbackOn = Exception.class)
-    public void signup(SignUpRequestModel requestModel) {
+    public void signup(SignUpRequestModel requestModel) throws ParkingException {
         UserEntity userEntity = createUserEntity((requestModel));
         if (requestModel.isVehicleOwner()) {
             createVehicleEntity(requestModel, userEntity);
@@ -59,20 +60,23 @@ public class UserServiceImpl extends BaseService implements UserService {
     }
 
     @Override
-    public UserResponseModel getMyProfile(Authentication authentication) {
+    public UserResponseModel getMyProfile(Authentication authentication) throws ParkingException {
         if (authentication.getPrincipal() == null) {
-            return null;
+            throw new ParkingException("authentication don't exit!");
         }
         String username = (String) authentication.getPrincipal();
         Optional<UserEntity> optionalUserEntity = userRepository.findByUserName(username);
         if (!optionalUserEntity.isPresent()) {
-            return null;
+            throw new ParkingException("authentication don't exit!");
         }
         UserEntity userEntity = optionalUserEntity.get();
 
         UserResponseModel userResponseModel = MapperUtils.map(userEntity, UserResponseModel.class);
         userResponseModel.setUserId(userEntity.getId().toString());
-        if (userResponseModel.isVehicleOwner()) {
+        userResponseModel.setRoleCode(userEntity.getRoleUser() != null
+                ? userEntity.getRoleUser().getCode():
+                Constant.BLANK);
+        if (PermissionConstant.RoleCode.VEHICLE_OWNER.getCode().equals(userResponseModel.getRoleCode())) {
             userResponseModel.setVehicles(mappingVehicle(userEntity.getId()));
         } else {
             userResponseModel.setParkingArea(mappingParkingArea(userEntity.getId()));
@@ -96,13 +100,19 @@ public class UserServiceImpl extends BaseService implements UserService {
         for (VehicleEntity vehicleEntity : vehicleEntities) {
             VehicleResponseModel vehicleResponseModel = MapperUtils.map(vehicleEntity, VehicleResponseModel.class);
             vehicleResponseModel.setVehicleId(vehicleEntity.getId().toString());
-
+            vehicleResponseModel.setRegisterDate(DateTimeUtils.convertDateFormat(
+                    vehicleEntity.getRegisterDate(),
+                    Constant.DateTimeFormat.YYYY_MM_DD,
+                    Constant.DateTimeFormat.DD_MM_YYYY));
             vehicleResponseModels.add(vehicleResponseModel);
         }
         return vehicleResponseModels;
     }
 
-    private UserEntity createUserEntity(SignUpRequestModel requestModel) {
+    private UserEntity createUserEntity(SignUpRequestModel requestModel) throws ParkingException {
+        if (userRepository.findByUserName(requestModel.getUserName()).isPresent()) {
+            throw new ParkingException("Username exists!");
+        }
         // get role
         RoleUserEntity roleUserEntity = roleUserRepository.findByCode(
                 requestModel.isVehicleOwner() ?
@@ -133,10 +143,10 @@ public class UserServiceImpl extends BaseService implements UserService {
                 .vehicleModel(requestModel.getVehicleModel())
                 .vehicleModel(requestModel.getVehicleModel())
                 .vehicleBrand(requestModel.getVehicleBrand())
-                .registerDate(DateTimeUtils.convertDateTimeFormat(
+                .registerDate(DateTimeUtils.convertDateFormat(
                         requestModel.getRegisterDate(),
-                        Constant.DateTimeFormat.DD_MM_YYYY_HH_MM_SS,
-                        Constant.DateTimeFormat.YYYY_MM_DD_HH_MM_SS))
+                        Constant.DateTimeFormat.DD_MM_YYYY,
+                        Constant.DateTimeFormat.YYYY_MM_DD))
                 .owner(userEntity)
                 .createdBy(currentDate())
                 .createdBy(getClass().getSimpleName())

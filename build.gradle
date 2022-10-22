@@ -41,6 +41,13 @@ dependencies {
 	// https://mvnrepository.com/artifact/org.modelmapper/modelmapper
 	implementation group: 'org.modelmapper', name: 'modelmapper', version: '3.0.0'
 
+	// https://mvnrepository.com/artifact/com.google.zxing/core
+	implementation group: 'com.google.zxing', name: 'core', version: '3.5.0'
+
+	// https://mvnrepository.com/artifact/com.google.zxing/core
+	implementation group: 'com.google.zxing', name: 'javase', version: '3.5.0'
+
+
 	compileOnly 'org.projectlombok:lombok'
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 	annotationProcessor 'org.projectlombok:lombok'

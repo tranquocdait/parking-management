@@ -50,7 +50,7 @@ public class UserController {
             return new ResponseEntity(new SuccessfulResponseModel(), HttpStatus.OK);
         } catch (Exception ex) {
             Map<String, String> errors = new HashMap<>();
-            errors.put("message", "create user not successfully");
+            errors.put("message", ex.getMessage());
             return new ResponseEntity(new ErrorResponseModel(errors), HttpStatus.BAD_REQUEST);
         }
     }
@@ -62,7 +62,7 @@ public class UserController {
             return new ResponseEntity(new SuccessfulResponseModel(userResponseModel), HttpStatus.OK);
         } catch (Exception ex) {
             Map<String, String> errors = new HashMap<>();
-            errors.put("message", "authentication don't exit!");
+            errors.put("message", ex.getMessage());
             return new ResponseEntity(new ErrorResponseModel(errors), HttpStatus.BAD_REQUEST);
         }
     }
