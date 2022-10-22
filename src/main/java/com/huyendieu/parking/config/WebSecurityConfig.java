@@ -7,7 +7,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -64,7 +63,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         });
 
         http.authorizeRequests()
-                .antMatchers(HttpMethod.POST, "/login").permitAll()
+                .antMatchers(HttpMethod.POST, PermissionConstant.LOGIN_URI).permitAll()
                 .antMatchers(HttpMethod.GET, "/getAll").hasRole(PermissionConstant.RoleCode.ADMIN.getCode())
 //                .antMatchers(HttpMethod.POST, "/categories").hasRole("ADMIN")
 //                .antMatchers(HttpMethod.DELETE, "/categories/{id}").authenticated()

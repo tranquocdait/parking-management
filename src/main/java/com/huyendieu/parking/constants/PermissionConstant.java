@@ -6,6 +6,8 @@ public class PermissionConstant {
 
     public static final long EXPIRATION_TIME = 1000 * 3600 * 24; // 1 day
 
+    public static String LOGIN_URI = "/login";
+
     public enum RoleCode {
 
         ADMIN(1, "ADMIN", "ROLE_ADMIN", "Admin"),

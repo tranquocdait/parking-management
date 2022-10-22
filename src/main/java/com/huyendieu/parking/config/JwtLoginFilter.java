@@ -1,6 +1,7 @@
 package com.huyendieu.parking.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.huyendieu.parking.constants.PermissionConstant;
 import com.huyendieu.parking.model.dto.UserLoginDTO;
 import com.huyendieu.parking.services.TokenAuthenticationService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,12 +25,12 @@ public class JwtLoginFilter extends AbstractAuthenticationProcessingFilter {
     private TokenAuthenticationService tokenAuthenticationService;
 
     public JwtLoginFilter(AuthenticationManager authenticationManager) {
-        super(new AntPathRequestMatcher("/login", "POST"));
+        super(new AntPathRequestMatcher(PermissionConstant.LOGIN_URI, "POST"));
         setAuthenticationManager(authenticationManager);
     }
 
     @Override
-    public Authentication attemptAuthentication(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws AuthenticationException, IOException, ServletException {
+    public Authentication attemptAuthentication(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws AuthenticationException, IOException {
         String requestBody = httpServletRequest.getReader().lines()
                 .collect(Collectors.joining(System.lineSeparator()));
 
@@ -44,7 +45,7 @@ public class JwtLoginFilter extends AbstractAuthenticationProcessingFilter {
 
     @Override
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response,
-                                            FilterChain chain, Authentication authResult) throws IOException, ServletException {
+                                            FilterChain chain, Authentication authResult) {
         tokenAuthenticationService.addAuthentication(response, authResult.getName());
     }
 

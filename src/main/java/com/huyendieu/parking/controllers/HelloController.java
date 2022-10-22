@@ -22,4 +22,9 @@ public class HelloController {
     public ResponseEntity<List<TestEntity>> custom() {
         return new ResponseEntity<>(_testRepository.findAll(), HttpStatus.OK);
     }
+
+    @RequestMapping(value = "/hello", method = RequestMethod.GET)
+    public ResponseEntity<String> sayHello() {
+        return new ResponseEntity<>("Hello world!", HttpStatus.OK);
+    }
 }
