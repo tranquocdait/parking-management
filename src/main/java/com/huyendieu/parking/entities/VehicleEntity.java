@@ -34,4 +34,7 @@ public class VehicleEntity extends BaseEntity {
 
     @Field(name = "is_disable")
     private boolean disable;
+
+    @Field(name = "is_active")
+    private boolean active;
 }

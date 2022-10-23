@@ -8,4 +8,7 @@ public interface ParkingAreaRepository extends MongoRepository<ParkingAreaEntity
 
     @Query("{'owner.id' : ?0, 'disable': false }")
     ParkingAreaEntity findFirstByOwnerId(Object userId);
+
+    @Query("{'owner.user_name' : ?0, 'disable': false }")
+    ParkingAreaEntity findFirstByOwner(String username);
 }

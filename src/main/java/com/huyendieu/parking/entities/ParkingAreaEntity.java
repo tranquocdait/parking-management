@@ -17,7 +17,7 @@ import java.util.List;
 public class ParkingAreaEntity extends BaseEntity {
 
     @Id
-    private ObjectId userID;
+    private ObjectId id;
 
     @Field(name = "address")
     private String address;

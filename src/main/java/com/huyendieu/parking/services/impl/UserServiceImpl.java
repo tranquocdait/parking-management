@@ -62,23 +62,24 @@ public class UserServiceImpl extends BaseService implements UserService {
     @Override
     public UserResponseModel getMyProfile(Authentication authentication) throws ParkingException {
         if (authentication.getPrincipal() == null) {
-            throw new ParkingException("authentication don't exit!");
+            throw new ParkingException("authentication don't exist!");
         }
         String username = (String) authentication.getPrincipal();
         Optional<UserEntity> optionalUserEntity = userRepository.findByUserName(username);
         if (!optionalUserEntity.isPresent()) {
-            throw new ParkingException("authentication don't exit!");
+            throw new ParkingException("authentication don't exist!");
         }
         UserEntity userEntity = optionalUserEntity.get();
 
         UserResponseModel userResponseModel = MapperUtils.map(userEntity, UserResponseModel.class);
         userResponseModel.setUserId(userEntity.getId().toString());
         userResponseModel.setRoleCode(userEntity.getRoleUser() != null
-                ? userEntity.getRoleUser().getCode():
+                ? userEntity.getRoleUser().getCode() :
                 Constant.BLANK);
         if (PermissionConstant.RoleCode.VEHICLE_OWNER.getCode().equals(userResponseModel.getRoleCode())) {
             userResponseModel.setVehicles(mappingVehicle(userEntity.getId()));
-        } else {
+        }
+        if (PermissionConstant.RoleCode.PARKING_OWNER.getCode().equals(userResponseModel.getRoleCode())) {
             userResponseModel.setParkingArea(mappingParkingArea(userEntity.getId()));
         }
         return userResponseModel;
@@ -148,6 +149,7 @@ public class UserServiceImpl extends BaseService implements UserService {
                         Constant.DateTimeFormat.DD_MM_YYYY,
                         Constant.DateTimeFormat.YYYY_MM_DD))
                 .owner(userEntity)
+                .active(true)
                 .createdBy(currentDate())
                 .createdBy(getClass().getSimpleName())
                 .build();
