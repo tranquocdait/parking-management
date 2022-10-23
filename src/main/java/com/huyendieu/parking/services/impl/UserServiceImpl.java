@@ -138,34 +138,42 @@ public class UserServiceImpl extends BaseService implements UserService {
         return userEntity;
     }
 
-    private void createVehicleEntity(SignUpRequestModel requestModel, UserEntity userEntity) {
-        VehicleEntity vehicleEntity = VehicleEntity.builder()
-                .plateNumber(requestModel.getPlateNumber())
-                .vehicleModel(requestModel.getVehicleModel())
-                .vehicleModel(requestModel.getVehicleModel())
-                .vehicleBrand(requestModel.getVehicleBrand())
-                .registerDate(DateTimeUtils.convertDateFormat(
-                        requestModel.getRegisterDate(),
-                        Constant.DateTimeFormat.DD_MM_YYYY,
-                        Constant.DateTimeFormat.YYYY_MM_DD))
-                .owner(userEntity)
-                .active(true)
-                .createdBy(currentDate())
-                .createdBy(getClass().getSimpleName())
-                .build();
-        vehicleRepository.save(vehicleEntity);
+    private void createVehicleEntity(SignUpRequestModel requestModel, UserEntity userEntity) throws ParkingException {
+        try {
+            VehicleEntity vehicleEntity = VehicleEntity.builder()
+                    .plateNumber(requestModel.getPlateNumber())
+                    .vehicleModel(requestModel.getVehicleModel())
+                    .vehicleModel(requestModel.getVehicleModel())
+                    .vehicleBrand(requestModel.getVehicleBrand())
+                    .registerDate(DateTimeUtils.convertDateFormat(
+                            requestModel.getRegisterDate(),
+                            Constant.DateTimeFormat.DD_MM_YYYY,
+                            Constant.DateTimeFormat.YYYY_MM_DD))
+                    .owner(userEntity)
+                    .active(true)
+                    .createdBy(currentDate())
+                    .createdBy(getClass().getSimpleName())
+                    .build();
+            vehicleRepository.save(vehicleEntity);
+        } catch (Exception ex) {
+            throw new ParkingException(ex.getMessage());
+        }
     }
 
-    private void createParkingEntity(SignUpRequestModel requestModel, UserEntity userEntity) {
-        ParkingAreaEntity parkingAreaEntity = ParkingAreaEntity.builder()
-                .address(requestModel.getAddress())
-                .province(requestModel.getProvince())
-                .district(requestModel.getDistrict())
-                .commune(requestModel.getCommune())
-                .owner(userEntity)
-                .createdBy(currentDate())
-                .createdBy(getClass().getSimpleName())
-                .build();
-        parkingAreaRepository.save(parkingAreaEntity);
+    private void createParkingEntity(SignUpRequestModel requestModel, UserEntity userEntity) throws ParkingException {
+        try {
+            ParkingAreaEntity parkingAreaEntity = ParkingAreaEntity.builder()
+                    .address(requestModel.getAddress())
+                    .province(requestModel.getProvince())
+                    .district(requestModel.getDistrict())
+                    .commune(requestModel.getCommune())
+                    .owner(userEntity)
+                    .createdBy(currentDate())
+                    .createdBy(getClass().getSimpleName())
+                    .build();
+            parkingAreaRepository.save(parkingAreaEntity);
+        } catch (Exception ex) {
+            throw new ParkingException(ex.getMessage());
+        }
     }
 }
