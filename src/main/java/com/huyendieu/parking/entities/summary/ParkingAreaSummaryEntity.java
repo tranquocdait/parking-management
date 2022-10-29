@@ -1,21 +1,18 @@
-package com.huyendieu.parking.entities;
+package com.huyendieu.parking.entities.summary;
 
-import com.huyendieu.parking.entities.summary.VehicleSummaryEntity;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.experimental.SuperBuilder;
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
-import java.util.List;
-
 @Data
-@SuperBuilder
+@AllArgsConstructor
 @NoArgsConstructor
-@Document("parking_areas")
-public class ParkingAreaEntity extends BaseEntity {
+@Builder
+public class ParkingAreaSummaryEntity {
 
     @Id
     private ObjectId id;
@@ -32,11 +29,8 @@ public class ParkingAreaEntity extends BaseEntity {
     @Field(name = "commune")
     private String commune;
 
-    @Field(name = "owner")
-    private UserEntity owner;
-
-    @Field(name = "vehicles")
-    private List<VehicleSummaryEntity> vehicles;
+    @Field(name = "username_owner")
+    private String usernameOwner;
 
     @Field(name = "is_disable")
     private boolean disable;

@@ -130,7 +130,7 @@ public class UserServiceImpl extends BaseService implements UserService {
                 .email(requestModel.getEmail())
                 .phoneNumber(requestModel.getPhoneNumber())
                 .roleUser(roleUserEntity)
-                .createdBy(currentDate())
+                .createdDate(currentDate())
                 .createdBy(getClass().getSimpleName())
                 .build();
         userRepository.save(userEntity);
@@ -151,7 +151,7 @@ public class UserServiceImpl extends BaseService implements UserService {
                             Constant.DateTimeFormat.YYYY_MM_DD))
                     .owner(userEntity)
                     .active(true)
-                    .createdBy(currentDate())
+                    .createdDate(currentDate())
                     .createdBy(getClass().getSimpleName())
                     .build();
             vehicleRepository.save(vehicleEntity);
@@ -168,7 +168,7 @@ public class UserServiceImpl extends BaseService implements UserService {
                     .district(requestModel.getDistrict())
                     .commune(requestModel.getCommune())
                     .owner(userEntity)
-                    .createdBy(currentDate())
+                    .createdDate(currentDate())
                     .createdBy(getClass().getSimpleName())
                     .build();
             parkingAreaRepository.save(parkingAreaEntity);

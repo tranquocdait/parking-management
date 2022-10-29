@@ -7,12 +7,14 @@ import com.huyendieu.parking.model.response.UserResponseModel;
 import com.huyendieu.parking.model.response.base.ErrorResponseModel;
 import com.huyendieu.parking.model.response.base.SuccessfulResponseModel;
 import com.huyendieu.parking.services.UserService;
+import com.huyendieu.parking.utils.ValidateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
@@ -46,6 +48,10 @@ public class UserController {
     @PostMapping("/sign-up")
     public ResponseEntity<?> createUser(@Valid @RequestBody SignUpRequestModel requestModel) {
         try {
+            Map<String, String> errorMessages = validateSignUp(requestModel);
+            if (!CollectionUtils.isEmpty(errorMessages)) {
+                return new ResponseEntity(new ErrorResponseModel(errorMessages), HttpStatus.BAD_REQUEST);
+            }
             userService.signup(requestModel);
             return new ResponseEntity(new SuccessfulResponseModel(), HttpStatus.OK);
         } catch (Exception ex) {
@@ -53,6 +59,14 @@ public class UserController {
             errors.put("message", ex.getMessage());
             return new ResponseEntity(new ErrorResponseModel(errors), HttpStatus.BAD_REQUEST);
         }
+    }
+
+    private Map<String, String> validateSignUp(SignUpRequestModel requestModel) {
+        Map<String, String> errorMessages = new HashMap<>();
+        if (ValidateUtils.isDateValid(requestModel.getRegisterDate())) {
+            errorMessages.put("register_date", "error format");
+        }
+        return errorMessages;
     }
 
     @GetMapping("/my-profile")
