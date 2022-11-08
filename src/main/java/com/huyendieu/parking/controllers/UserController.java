@@ -61,14 +61,6 @@ public class UserController {
         }
     }
 
-    private Map<String, String> validateSignUp(SignUpRequestModel requestModel) {
-        Map<String, String> errorMessages = new HashMap<>();
-        if (ValidateUtils.isDateValid(requestModel.getRegisterDate())) {
-            errorMessages.put("register_date", "error format");
-        }
-        return errorMessages;
-    }
-
     @GetMapping("/my-profile")
     public ResponseEntity<?> getMyProfile(Authentication authentication) {
         try {
@@ -79,5 +71,13 @@ public class UserController {
             errors.put("message", ex.getMessage());
             return new ResponseEntity(new ErrorResponseModel(errors), HttpStatus.BAD_REQUEST);
         }
+    }
+
+    private Map<String, String> validateSignUp(SignUpRequestModel requestModel) {
+        Map<String, String> errorMessages = new HashMap<>();
+        if (!ValidateUtils.isDateValid(requestModel.getRegisterDate())) {
+            errorMessages.put("register_date", "error format");
+        }
+        return errorMessages;
     }
 }
