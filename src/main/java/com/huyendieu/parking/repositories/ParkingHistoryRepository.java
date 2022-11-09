@@ -11,5 +11,5 @@ import java.util.List;
 public interface ParkingHistoryRepository extends MongoRepository<ParkingHistoryEntity, String> {
 
     @Query("{ 'vehicle.username_owner' : ?0, 'parking_area.id' : ?1, 'check_out_date': { '$nin': [ null, '' ] } }")
-    List<ParkingHistoryEntity> findAllByNotCheckOut(String username, ObjectId parkingAreaId);
+    List<ParkingHistoryEntity> findUserByNotCheckOut(String username, ObjectId parkingAreaId);
 }

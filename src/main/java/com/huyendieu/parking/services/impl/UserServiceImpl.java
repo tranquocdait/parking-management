@@ -65,7 +65,7 @@ public class UserServiceImpl extends BaseService implements UserService {
             throw new ParkingException("authentication don't exist!");
         }
         String username = (String) authentication.getPrincipal();
-        Optional<UserEntity> optionalUserEntity = userRepository.findByUserName(username);
+        Optional<UserEntity> optionalUserEntity = userRepository.findByUserNameIgnoreCase(username);
         if (!optionalUserEntity.isPresent()) {
             throw new ParkingException("authentication don't exist!");
         }
@@ -111,7 +111,7 @@ public class UserServiceImpl extends BaseService implements UserService {
     }
 
     private UserEntity createUserEntity(SignUpRequestModel requestModel) throws ParkingException {
-        if (userRepository.findByUserName(requestModel.getUserName()).isPresent()) {
+        if (userRepository.findByUserNameIgnoreCase(requestModel.getUserName()).isPresent()) {
             throw new ParkingException("Username exists!");
         }
         // get role

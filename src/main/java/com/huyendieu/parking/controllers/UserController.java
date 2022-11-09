@@ -75,7 +75,7 @@ public class UserController {
 
     private Map<String, String> validateSignUp(SignUpRequestModel requestModel) {
         Map<String, String> errorMessages = new HashMap<>();
-        if (!ValidateUtils.isDateValid(requestModel.getRegisterDate())) {
+        if (requestModel.isVehicleOwner() && !ValidateUtils.isDateValid(requestModel.getRegisterDate())) {
             errorMessages.put("register_date", "error format");
         }
         return errorMessages;

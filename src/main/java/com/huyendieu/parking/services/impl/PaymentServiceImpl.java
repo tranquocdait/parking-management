@@ -60,7 +60,7 @@ public class PaymentServiceImpl extends BaseService implements PaymentService {
         }
         String username = (String) authentication.getPrincipal();
         List<ParkingHistoryEntity> parkingHistoryEntities =
-                parkingHistoryRepository.findAllByNotCheckOut(username, new ObjectId(parkingAreaId));
+                parkingHistoryRepository.findUserByNotCheckOut(username, new ObjectId(parkingAreaId));
         ParkingHistoryEntity parkingHistoryEntity = parkingHistoryEntities.get(parkingHistoryEntities.size() - 1);
         parkingHistoryEntity.setCheckOutDate(currentDate());
         parkingHistoryEntity.setUpdatedDate(currentDate());
