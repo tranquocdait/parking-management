@@ -29,55 +29,55 @@ public class UserController {
     @Autowired
     private UserService userService;
 
-    @PostMapping("/sign-in")
-    public ResponseEntity<?> createUser(@Valid @RequestBody SignInRequestModel requestModel, HttpServletRequest request) {
-        try {
-            RestTemplate restTemplate = new RestTemplate();
-            String uri = request.getRequestURL().substring(0, request.getRequestURL().indexOf(request.getRequestURI()));
-            HttpEntity<SignInRequestModel> httpEntity = new HttpEntity<>(requestModel);
-            ResponseEntity<SuccessfulResponseModel> response = restTemplate
-                    .exchange(uri + PermissionConstant.LOGIN_URI, HttpMethod.POST, httpEntity, SuccessfulResponseModel.class);
-            return new ResponseEntity(response.getBody(), HttpStatus.OK);
-        } catch (Exception ex) {
-            Map<String, String> errors = new HashMap<>();
-            errors.put("message", "create user not successfully");
-            return new ResponseEntity(new ErrorResponseModel(errors), HttpStatus.BAD_REQUEST);
-        }
-    }
+	@PostMapping("/sign-in")
+	public ResponseEntity<?> createUser(@Valid @RequestBody SignInRequestModel requestModel, HttpServletRequest request) {
+		try {
+			RestTemplate restTemplate = new RestTemplate();
+			String uri = request.getRequestURL().substring(0, request.getRequestURL().indexOf(request.getRequestURI()));
+			HttpEntity<SignInRequestModel> httpEntity = new HttpEntity<>(requestModel);
+			ResponseEntity<SuccessfulResponseModel> response = restTemplate.exchange(uri + PermissionConstant.LOGIN_URI,
+					HttpMethod.POST, httpEntity, SuccessfulResponseModel.class);
+			return new ResponseEntity(response.getBody(), HttpStatus.OK);
+		} catch (Exception ex) {
+			Map<String, String> errors = new HashMap<>();
+			errors.put("message", "create user not successfully");
+			return new ResponseEntity(new ErrorResponseModel(errors), HttpStatus.BAD_REQUEST);
+		}
+	}
 
-    @PostMapping("/sign-up")
-    public ResponseEntity<?> createUser(@Valid @RequestBody SignUpRequestModel requestModel) {
-        try {
-            Map<String, String> errorMessages = validateSignUp(requestModel);
-            if (!CollectionUtils.isEmpty(errorMessages)) {
-                return new ResponseEntity(new ErrorResponseModel(errorMessages), HttpStatus.BAD_REQUEST);
-            }
-            userService.signup(requestModel);
-            return new ResponseEntity(new SuccessfulResponseModel(), HttpStatus.OK);
-        } catch (Exception ex) {
-            Map<String, String> errors = new HashMap<>();
-            errors.put("message", ex.getMessage());
-            return new ResponseEntity(new ErrorResponseModel(errors), HttpStatus.BAD_REQUEST);
-        }
-    }
+	@PostMapping("/sign-up")
+	public ResponseEntity<?> createUser(@Valid @RequestBody SignUpRequestModel requestModel) {
+		try {
+			Map<String, String> errorMessages = validateSignUp(requestModel);
+			if (!CollectionUtils.isEmpty(errorMessages)) {
+				return new ResponseEntity(new ErrorResponseModel(errorMessages), HttpStatus.BAD_REQUEST);
+			}
+			userService.signup(requestModel);
+			return new ResponseEntity(new SuccessfulResponseModel(), HttpStatus.OK);
+		} catch (Exception ex) {
+			Map<String, String> errors = new HashMap<>();
+			errors.put("message", ex.getMessage());
+			return new ResponseEntity(new ErrorResponseModel(errors), HttpStatus.BAD_REQUEST);
+		}
+	}
 
-    @GetMapping("/my-profile")
-    public ResponseEntity<?> getMyProfile(Authentication authentication) {
-        try {
-            UserResponseModel userResponseModel = userService.getMyProfile(authentication);
-            return new ResponseEntity(new SuccessfulResponseModel(userResponseModel), HttpStatus.OK);
-        } catch (Exception ex) {
-            Map<String, String> errors = new HashMap<>();
-            errors.put("message", ex.getMessage());
-            return new ResponseEntity(new ErrorResponseModel(errors), HttpStatus.BAD_REQUEST);
-        }
-    }
+	@GetMapping("/my-profile")
+	public ResponseEntity<?> getMyProfile(Authentication authentication) {
+		try {
+			UserResponseModel userResponseModel = userService.getMyProfile(authentication);
+			return new ResponseEntity(new SuccessfulResponseModel(userResponseModel), HttpStatus.OK);
+		} catch (Exception ex) {
+			Map<String, String> errors = new HashMap<>();
+			errors.put("message", ex.getMessage());
+			return new ResponseEntity(new ErrorResponseModel(errors), HttpStatus.BAD_REQUEST);
+		}
+	}
 
-    private Map<String, String> validateSignUp(SignUpRequestModel requestModel) {
-        Map<String, String> errorMessages = new HashMap<>();
-        if (requestModel.isVehicleOwner() && !ValidateUtils.isDateValid(requestModel.getRegisterDate())) {
-            errorMessages.put("register_date", "error format");
-        }
-        return errorMessages;
-    }
+	private Map<String, String> validateSignUp(SignUpRequestModel requestModel) {
+		Map<String, String> errorMessages = new HashMap<>();
+		if (requestModel.isVehicleOwner() && !ValidateUtils.isDateValid(requestModel.getRegisterDate())) {
+			errorMessages.put("register_date", "error format");
+		}
+		return errorMessages;
+	}
 }

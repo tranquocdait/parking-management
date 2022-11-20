@@ -40,20 +40,21 @@ public class ParkingAreaServiceImpl implements ParkingAreaService {
     }
 
     @Override
-    public TrackingParkingAreaResponseModel trackingManage(Authentication authentication, TrackingParkingRequestModel trackingParkingRequestModel) throws ParkingException {
+    public TrackingParkingAreaResponseModel trackingManage(Authentication authentication, TrackingParkingRequestModel trackingParkingRequestModel)
+    		throws ParkingException {
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new ParkingException("authentication don't exist!");
         }
-        String username = authentication.getPrincipal().toString();
+		String username = authentication.getPrincipal().toString();
 
-        List<TrackingParkingAreaItemResponseModel> trackingParkingAreaModels = new ArrayList<>();
-        List<ParkingHistoryEntity> parkingHistoryEntities = parkingHistoryComplexRepository.findAllByNotCheckOut(username, trackingParkingRequestModel);
-        long totalRecord = parkingHistoryComplexRepository.countAllByNotCheckOut(username, trackingParkingRequestModel);
-        if (CollectionUtils.isEmpty(parkingHistoryEntities)) {
-            for (ParkingHistoryEntity parkingHistoryEntity : parkingHistoryEntities) {
-                trackingParkingAreaModels.add(mappingHistoryData(parkingHistoryEntity));
-            }
-        }
+		List<TrackingParkingAreaItemResponseModel> trackingParkingAreaModels = new ArrayList<>();
+		List<ParkingHistoryEntity> parkingHistoryEntities = parkingHistoryComplexRepository.findAll(username, trackingParkingRequestModel);
+		long totalRecord = parkingHistoryComplexRepository.countAll(username, trackingParkingRequestModel);
+		if (!CollectionUtils.isEmpty(parkingHistoryEntities)) {
+			for (ParkingHistoryEntity parkingHistoryEntity : parkingHistoryEntities) {
+				trackingParkingAreaModels.add(mappingHistoryData(parkingHistoryEntity));
+			}
+		}
         return TrackingParkingAreaResponseModel.builder()
                 .dataList(trackingParkingAreaModels)
                 .totalRecord(totalRecord)

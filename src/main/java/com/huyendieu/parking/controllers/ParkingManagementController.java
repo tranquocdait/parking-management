@@ -27,12 +27,13 @@ public class ParkingManagementController {
             if (authentication == null || !authentication.isAuthenticated()) {
                 return new ResponseEntity(new ErrorResponseModel("Authentication don't exits!"), HttpStatus.BAD_REQUEST);
             }
-            TrackingParkingAreaResponseModel responseModel = parkingAreaService.trackingManage(authentication, trackingParkingRequestModel);
-            return new ResponseEntity(new SuccessfulResponseModel(responseModel), HttpStatus.OK);
-        } catch (Exception ex) {
-            Map<String, String> errors = new HashMap<>();
-            errors.put("message", ex.getMessage());
-            return new ResponseEntity(new ErrorResponseModel(errors), HttpStatus.BAD_REQUEST);
-        }
-    }
+            TrackingParkingAreaResponseModel responseModel = 
+            		parkingAreaService.trackingManage(authentication, trackingParkingRequestModel);
+			return new ResponseEntity(new SuccessfulResponseModel(responseModel), HttpStatus.OK);
+		} catch (Exception ex) {
+			Map<String, String> errors = new HashMap<>();
+			errors.put("message", ex.getMessage());
+			return new ResponseEntity(new ErrorResponseModel(errors), HttpStatus.BAD_REQUEST);
+		}
+	}
 }

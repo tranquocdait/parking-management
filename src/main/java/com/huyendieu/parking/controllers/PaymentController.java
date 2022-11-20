@@ -9,7 +9,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.HashMap;
@@ -21,8 +23,8 @@ public class PaymentController {
     @Autowired
     private PaymentService paymentService;
 
-    @GetMapping("/check-in")
-    public ResponseEntity<?> checkIn(Authentication authentication, String parkingAreaId) {
+    @GetMapping("/check-in/{parkingAreaId}")
+    public ResponseEntity<?> checkIn(Authentication authentication, @PathVariable String parkingAreaId) {
         try {
             paymentService.checkIn(authentication, parkingAreaId);
             return new ResponseEntity(new SuccessfulResponseModel(parkingAreaId), HttpStatus.OK);
@@ -33,9 +35,9 @@ public class PaymentController {
         }
     }
 
-    @GetMapping("/check-out")
-    public ResponseEntity<?> checkOut(Authentication authentication, String parkingAreaId) {
-        try {
+    @GetMapping("/check-out/{parkingAreaId}")
+    public ResponseEntity<?> checkOut(Authentication authentication, @PathVariable String parkingAreaId) {
+        try { 
             paymentService.checkOut(authentication, parkingAreaId);
             return new ResponseEntity(new SuccessfulResponseModel(parkingAreaId), HttpStatus.OK);
         } catch (Exception ex) {
