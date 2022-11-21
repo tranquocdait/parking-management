@@ -1,9 +1,9 @@
-package com.huyendieu.parking.entities;
+ package com.huyendieu.parking.entities;
 
-import lombok.Builder;
+import org.springframework.data.mongodb.core.mapping.Document;
+
 import lombok.Data;
 import lombok.experimental.SuperBuilder;
-import org.springframework.data.mongodb.core.mapping.Document;
 
 @Data
 @SuperBuilder

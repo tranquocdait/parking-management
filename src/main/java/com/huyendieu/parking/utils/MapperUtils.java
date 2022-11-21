@@ -1,9 +1,8 @@
 package com.huyendieu.parking.utils;
 
-import org.modelmapper.ModelMapper;
-import org.modelmapper.TypeToken;
-
 import java.lang.reflect.Type;
+
+import org.modelmapper.ModelMapper;
 
 public class MapperUtils {
 

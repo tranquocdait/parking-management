@@ -8,7 +8,7 @@ public class MongoEventListener<E> extends AbstractMongoEventListener<E> {
     @Override
     public void onBeforeConvert(BeforeConvertEvent<E> event) {
         Object source = event.getSource();
-        System.out.println(event.getCollectionName());
+        System.out.println("Updated Collection:" + event.getCollectionName());
     }
 
 }
