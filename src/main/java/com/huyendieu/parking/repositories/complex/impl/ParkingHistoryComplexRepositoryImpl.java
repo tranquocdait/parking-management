@@ -42,7 +42,7 @@ public class ParkingHistoryComplexRepositoryImpl implements ParkingHistoryComple
 		String keyword = requestModel.getKeyword();
 		if (!StringUtils.isEmpty(keyword)) {
 			Criteria keywordCriteria = new Criteria().orOperator(
-					Criteria.where("parking_area.username_owner").regex(requestModel.getKeyword(), "i"),
+					Criteria.where("vehicle.plate_number").regex(requestModel.getKeyword(), "i"),
 					Criteria.where("vehicle.username_owner").regex(requestModel.getKeyword(), "i"),
 					Criteria.where("vehicle.vehicle_model").regex(requestModel.getKeyword(), "i"),
 					Criteria.where("vehicle.vehicle_brand").regex(requestModel.getKeyword(), "i"));
