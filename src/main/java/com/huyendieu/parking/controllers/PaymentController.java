@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.huyendieu.parking.model.response.CheckParkingResponseModel;
 import com.huyendieu.parking.model.response.base.ErrorResponseModel;
 import com.huyendieu.parking.model.response.base.SuccessfulResponseModel;
 import com.huyendieu.parking.services.PaymentService;
@@ -22,23 +23,11 @@ public class PaymentController {
     @Autowired
     private PaymentService paymentService;
 
-    @GetMapping("/check-in/{parkingAreaId}")
-    public ResponseEntity<?> checkIn(Authentication authentication, @PathVariable String parkingAreaId) {
+    @GetMapping("/check-parking/{parkingAreaId}")
+    public ResponseEntity<?> checkParking(Authentication authentication, @PathVariable String parkingAreaId) {
         try {
-            paymentService.checkIn(authentication, parkingAreaId);
-            return new ResponseEntity(new SuccessfulResponseModel(parkingAreaId), HttpStatus.OK);
-        } catch (Exception ex) {
-            Map<String, String> errors = new HashMap<>();
-            errors.put("message", ex.getMessage());
-            return new ResponseEntity(new ErrorResponseModel(errors), HttpStatus.BAD_REQUEST);
-        }
-    }
-
-    @GetMapping("/check-out/{parkingAreaId}")
-    public ResponseEntity<?> checkOut(Authentication authentication, @PathVariable String parkingAreaId) {
-        try { 
-            paymentService.checkOut(authentication, parkingAreaId);
-            return new ResponseEntity(new SuccessfulResponseModel(parkingAreaId), HttpStatus.OK);
+        	CheckParkingResponseModel checkParkingResponseModel = paymentService.checkParking(authentication, parkingAreaId);
+            return new ResponseEntity(new SuccessfulResponseModel(checkParkingResponseModel), HttpStatus.OK);
         } catch (Exception ex) {
             Map<String, String> errors = new HashMap<>();
             errors.put("message", ex.getMessage());

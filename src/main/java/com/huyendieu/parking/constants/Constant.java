@@ -14,4 +14,34 @@ public class Constant {
         public static final String DD_MM_YYYY = "dd/MM/yyyy";
         public static final String YYYY_MM_DD = "yyyy-MM-dd";
     }
+    
+    public enum CheckParkingCode {
+
+        CHECK_IN(1, "CHECK_IN", "Check in successful."),
+        CHECK_OUT(2, "CHECK_OUT", "Check out successful.");
+
+        private final Integer key;
+
+        private final String code;
+
+        private final String value;
+
+        CheckParkingCode(Integer key, String code, String value) {
+            this.key = key;
+            this.code = code;
+            this.value = value;
+        }
+
+        public Integer getKey() {
+            return key;
+        }
+
+        public String getCode() {
+            return code;
+        }
+
+        public String getValue() {
+            return value;
+        }
+    }
 }

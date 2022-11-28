@@ -14,6 +14,7 @@ import org.springframework.stereotype.Repository;
 import com.huyendieu.parking.entities.ParkingHistoryEntity;
 import com.huyendieu.parking.model.request.TrackingParkingRequestModel;
 import com.huyendieu.parking.repositories.complex.ParkingHistoryComplexRepository;
+import com.huyendieu.parking.utils.StringUtils;
 
 @Repository
 public class ParkingHistoryComplexRepositoryImpl implements ParkingHistoryComplexRepository {
@@ -38,8 +39,15 @@ public class ParkingHistoryComplexRepositoryImpl implements ParkingHistoryComple
 
 	private Query makeQuery(String userNameOwner, TrackingParkingRequestModel requestModel) {
 		Criteria criteria = Criteria.where("parking_area.username_owner").is(userNameOwner);
-		criteria.and("vehicle.plate_number").regex(requestModel.getKeyword(), "i");
-//        query.addCriteria(Criteria.where("vehicle.username_owner").regex("userNameOwner",  "i"));
+		String keyword = requestModel.getKeyword();
+		if (!StringUtils.isEmpty(keyword)) {
+			Criteria keywordCriteria = new Criteria().orOperator(
+					Criteria.where("parking_area.username_owner").regex(requestModel.getKeyword(), "i"),
+					Criteria.where("vehicle.username_owner").regex(requestModel.getKeyword(), "i"),
+					Criteria.where("vehicle.vehicle_model").regex(requestModel.getKeyword(), "i"),
+					Criteria.where("vehicle.vehicle_brand").regex(requestModel.getKeyword(), "i"));
+			criteria.andOperator(keywordCriteria);
+		}
 		return Query.query(criteria);
 	}
 

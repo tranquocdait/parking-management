@@ -7,6 +7,7 @@ import com.huyendieu.parking.entities.VehicleEntity;
 import com.huyendieu.parking.entities.summary.ParkingAreaSummaryEntity;
 import com.huyendieu.parking.entities.summary.VehicleSummaryEntity;
 import com.huyendieu.parking.exception.ParkingException;
+import com.huyendieu.parking.model.response.CheckParkingResponseModel;
 import com.huyendieu.parking.repositories.ParkingAreaRepository;
 import com.huyendieu.parking.repositories.ParkingHistoryRepository;
 import com.huyendieu.parking.repositories.VehicleRepository;
@@ -31,17 +32,39 @@ public class PaymentServiceImpl extends BaseService implements PaymentService {
     @Autowired
     private VehicleRepository vehicleRepository;
 
-    @Autowired
-    private ParkingHistoryRepository parkingHistoryRepository;
+	@Autowired
+	private ParkingHistoryRepository parkingHistoryRepository;
 
-    @Override
-    public void checkIn(Authentication authentication, String parkingAreaId) throws ParkingException {
-        if (authentication.getPrincipal() == null) {
-            throw new ParkingException("authentication don't exist!");
-        }
-        String username = (String) authentication.getPrincipal();
+	@Override
+	public CheckParkingResponseModel checkParking(Authentication authentication, String parkingAreaId) throws ParkingException {
+		if (authentication.getPrincipal() == null) {
+			throw new ParkingException("authentication don't exist!");
+		}
+		String username = (String) authentication.getPrincipal();
+		List<ParkingHistoryEntity> parkingHistoryEntities = 
+				parkingHistoryRepository.findUserByNotCheckOut(username, new ObjectId(parkingAreaId));
+		if (!CollectionUtils.isEmpty(parkingHistoryEntities)) {
+			checkOut(parkingHistoryEntities.get(0));
+			
+			return CheckParkingResponseModel.builder()
+					.parkingId(parkingAreaId)
+					.checkType(Constant.CheckParkingCode.CHECK_OUT.getCode())
+					.message(Constant.CheckParkingCode.CHECK_OUT.getValue())
+					.build();
+		} else {
+			checkIn(parkingAreaId, username);
 
-        ParkingAreaSummaryEntity parkingArea = mappingParkingAreaSummary(parkingAreaId);
+			return CheckParkingResponseModel.builder()
+					.parkingId(parkingAreaId)
+					.checkType(Constant.CheckParkingCode.CHECK_IN.getCode())
+					.message(Constant.CheckParkingCode.CHECK_IN.getValue())
+					.build();
+		}
+	}
+
+
+    public void checkIn(String parkingAreaId, String username) throws ParkingException {
+    	ParkingAreaSummaryEntity parkingArea = mappingParkingAreaSummary(parkingAreaId);
         VehicleSummaryEntity vehicle = mappingVehicleSummary(username);
         ParkingHistoryEntity parkingHistoryEntity = ParkingHistoryEntity.builder()
                 .checkInDate(currentDate())
@@ -53,15 +76,7 @@ public class PaymentServiceImpl extends BaseService implements PaymentService {
         parkingHistoryRepository.save(parkingHistoryEntity);
     }
 
-    @Override
-    public void checkOut(Authentication authentication, String parkingAreaId) throws ParkingException {
-        if (authentication.getPrincipal() == null) {
-            throw new ParkingException("authentication don't exist!");
-        }
-        String username = (String) authentication.getPrincipal();
-        List<ParkingHistoryEntity> parkingHistoryEntities =
-                parkingHistoryRepository.findUserByNotCheckOut(username, new ObjectId(parkingAreaId));
-        ParkingHistoryEntity parkingHistoryEntity = parkingHistoryEntities.get(parkingHistoryEntities.size() - 1);
+    public void checkOut(ParkingHistoryEntity parkingHistoryEntity) throws ParkingException {
         parkingHistoryEntity.setCheckOutDate(currentDate());
         parkingHistoryEntity.setUpdatedDate(currentDate());
         parkingHistoryEntity.setUpdatedBy(getClass().getSimpleName());
