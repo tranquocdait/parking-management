@@ -14,4 +14,7 @@ public class TrackingParkingRequestModel {
 
     @JsonProperty("keyword")
     private String keyword;
+    
+    @JsonProperty("type")
+    private int type;
 }
