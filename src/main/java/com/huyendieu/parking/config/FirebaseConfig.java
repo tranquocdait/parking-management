@@ -12,6 +12,7 @@ import org.springframework.core.io.ResourceLoader;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
 @Configuration
 @RequiredArgsConstructor
@@ -21,8 +22,7 @@ public class FirebaseConfig {
     ResourceLoader resourceLoader;
     @Bean
     FirebaseMessaging firebaseMessaging() throws IOException {
-        FileInputStream serviceAccount =
-                new FileInputStream(resourceLoader.getResource("classpath:static/firebase.json").getFile());
+        InputStream serviceAccount = resourceLoader.getResource("classpath:static/firebase.json").getInputStream();
 
         FirebaseOptions options = new FirebaseOptions.Builder()
                 .setCredentials(GoogleCredentials.fromStream(serviceAccount))
