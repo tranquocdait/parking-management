@@ -1,7 +1,6 @@
 package com.huyendieu.parking.constants;
 
 public class Constant {
-    public static final String BLANK = "";
 
     public enum Character {;
         public static final String BLANK = "";

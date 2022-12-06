@@ -1,6 +1,9 @@
 package com.huyendieu.parking.services;
 
+import com.huyendieu.parking.exception.ParkingException;
+import com.huyendieu.parking.model.response.QRCodeResponseModel;
+
 public interface VehicleService {
 
-    String generateQR(String username);
+    QRCodeResponseModel generateQR(String username) throws ParkingException;
 }

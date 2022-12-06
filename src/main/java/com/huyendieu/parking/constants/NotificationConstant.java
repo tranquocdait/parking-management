@@ -1,7 +1,9 @@
 package com.huyendieu.parking.constants;
 
 public class NotificationConstant {
-    public static final String NOTIFICATION_PATH = "notification-%s";
+    public enum NotificationPath {;
+        public static final String CHECKING = "checking-%s";
+    }
 
     public enum NotificationType {
 

@@ -2,6 +2,8 @@ package com.huyendieu.parking.services.impl;
 
 import com.huyendieu.parking.constants.Constant;
 import com.huyendieu.parking.entities.VehicleEntity;
+import com.huyendieu.parking.exception.ParkingException;
+import com.huyendieu.parking.model.response.QRCodeResponseModel;
 import com.huyendieu.parking.repositories.VehicleRepository;
 import com.huyendieu.parking.services.VehicleService;
 import com.huyendieu.parking.utils.QRCodeUtils;
@@ -18,12 +20,16 @@ public class VehicleServiceImpl implements VehicleService {
     private VehicleRepository vehicleRepository;
 
     @Override
-    public String generateQR(String username) {
+    public QRCodeResponseModel generateQR(String username) throws ParkingException {
         List<VehicleEntity> vehicleEntities = vehicleRepository.findAllByActiveIsTrue(username);
         if (CollectionUtils.isEmpty(vehicleEntities)) {
-            return Constant.Character.BLANK;
+            throw new ParkingException("authentication don't exist!");
         }
         VehicleEntity vehicleEntity = vehicleEntities.get(0);
-        return QRCodeUtils.generateQRCodeImage(vehicleEntity.getId().toString());
+        String vehicleId = vehicleEntity.getId().toString();
+        return QRCodeResponseModel.builder()
+                .userId(vehicleId)
+                .qrCode(QRCodeUtils.generateQRCodeImage(vehicleId))
+                .build();
     }
 }

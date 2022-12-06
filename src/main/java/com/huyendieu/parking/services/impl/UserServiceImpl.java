@@ -75,7 +75,7 @@ public class UserServiceImpl extends BaseService implements UserService {
         userResponseModel.setUserId(userEntity.getId().toString());
         userResponseModel.setRoleCode(userEntity.getRoleUser() != null
                 ? userEntity.getRoleUser().getCode() :
-                Constant.BLANK);
+                Constant.Character.BLANK);
         if (PermissionConstant.RoleCode.VEHICLE_OWNER.getCode().equals(userResponseModel.getRoleCode())) {
             userResponseModel.setVehicles(mappingVehicle(userEntity.getId()));
         }

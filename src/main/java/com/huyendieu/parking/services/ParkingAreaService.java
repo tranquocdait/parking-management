@@ -1,15 +1,16 @@
 package com.huyendieu.parking.services;
 
-import org.springframework.security.core.Authentication;
-
 import com.huyendieu.parking.exception.ParkingException;
 import com.huyendieu.parking.model.request.TrackingParkingRequestModel;
+import com.huyendieu.parking.model.response.QRCodeResponseModel;
 import com.huyendieu.parking.model.response.TrackingParkingAreaResponseModel;
+import org.springframework.security.core.Authentication;
 
 public interface ParkingAreaService {
 
-    String generateQR(String username);
+    QRCodeResponseModel generateQR(String username, boolean isViewAll) throws ParkingException;
 
-    TrackingParkingAreaResponseModel trackingManage(Authentication authentication, TrackingParkingRequestModel trackingParkingRequestModel) throws ParkingException;
+    TrackingParkingAreaResponseModel trackingManage(Authentication authentication,
+                                                    TrackingParkingRequestModel trackingParkingRequestModel) throws ParkingException;
 }
 	

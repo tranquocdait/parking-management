@@ -1,17 +1,20 @@
 package com.huyendieu.parking.services.impl;
 
 import com.huyendieu.parking.constants.Constant;
+import com.huyendieu.parking.constants.NotificationConstant;
 import com.huyendieu.parking.entities.ParkingAreaEntity;
 import com.huyendieu.parking.entities.ParkingHistoryEntity;
 import com.huyendieu.parking.entities.summary.VehicleSummaryEntity;
 import com.huyendieu.parking.exception.ParkingException;
 import com.huyendieu.parking.model.request.TrackingParkingRequestModel;
+import com.huyendieu.parking.model.response.QRCodeResponseModel;
 import com.huyendieu.parking.model.response.TrackingParkingAreaItemResponseModel;
 import com.huyendieu.parking.model.response.TrackingParkingAreaResponseModel;
 import com.huyendieu.parking.repositories.ParkingAreaRepository;
 import com.huyendieu.parking.repositories.complex.ParkingHistoryComplexRepository;
 import com.huyendieu.parking.services.ParkingAreaService;
 import com.huyendieu.parking.utils.DateTimeUtils;
+import com.huyendieu.parking.utils.NotificationUtils;
 import com.huyendieu.parking.utils.QRCodeUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -31,12 +34,19 @@ public class ParkingAreaServiceImpl implements ParkingAreaService {
     private ParkingHistoryComplexRepository parkingHistoryComplexRepository;
 
     @Override
-    public String generateQR(String username) {
+    public QRCodeResponseModel generateQR(String username, boolean isViewAll) throws ParkingException{
         ParkingAreaEntity parkingAreaEntity = parkingAreaRepository.findFirstByOwner(username);
         if (parkingAreaEntity == null) {
-            return Constant.Character.BLANK;
+            throw new ParkingException("authentication don't exist!");
         }
-        return QRCodeUtils.generateQRCodeImage(parkingAreaEntity.getId().toString());
+        String parkingAreaId = parkingAreaEntity.getId().toString();
+        if (isViewAll) {
+            NotificationUtils.removeNotification((String.format(NotificationConstant.NotificationPath.CHECKING, parkingAreaId)));
+        }
+        return QRCodeResponseModel.builder()
+                .userId(parkingAreaId)
+                .qrCode(QRCodeUtils.generateQRCodeImage(parkingAreaId))
+                .build();
     }
 
     @Override
