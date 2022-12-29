@@ -8,6 +8,16 @@ import java.time.format.DateTimeFormatter;
 
 public class DateTimeUtils {
 
+    public static String convertDateFormat(LocalDate datetime, String formatTo) {
+        try {
+            // desired output format
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern(formatTo);
+            return datetime.format(formatter);
+        } catch (Exception ex) {
+            return Constant.Character.BLANK;
+        }
+    }
+
     public static String convertDateTimeFormat(String datetime, String formatFrom, String formatTo) {
         if (StringUtils.isEmpty(datetime)) {
             return Constant.Character.BLANK;
