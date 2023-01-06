@@ -33,6 +33,12 @@ public class VehicleSummaryEntity {
     @Field(name = "username_owner")
     private String usernameOwner;
 
-    @Field(name = "is_disable")
-    private boolean disable;
+    @Field(name = "register_parking_date")
+    private String registerParkingDate;
+
+    @Field(name = "accepted_parking_date")
+    private String acceptedParkingDate;
+
+    @Field(name = "status")
+    private int status;
 }

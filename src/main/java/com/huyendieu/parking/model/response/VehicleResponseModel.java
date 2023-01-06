@@ -24,4 +24,13 @@ public class VehicleResponseModel {
     @JsonProperty("username_owner")
     private String usernameOwner;
 
+    @JsonProperty("register_parking_date")
+    private String registerParkingDate;
+
+    @JsonProperty("accepted_parking_date")
+    private String acceptedParkingDate;
+
+    @JsonProperty("status")
+    private int status;
+
 }

@@ -2,6 +2,7 @@ package com.huyendieu.parking.services;
 
 import com.huyendieu.parking.exception.ParkingException;
 import com.huyendieu.parking.model.request.DashboardRequestModel;
+import com.huyendieu.parking.model.request.ParkingRegistrationRequestModel;
 import com.huyendieu.parking.model.request.TrackingParkingRequestModel;
 import com.huyendieu.parking.model.response.DashboardResponseModel;
 import com.huyendieu.parking.model.response.QRCodeResponseModel;
@@ -21,5 +22,7 @@ public interface ParkingAreaService {
 
     DashboardResponseModel checkingStatistics(Authentication authentication,
                                               DashboardRequestModel requestModel) throws ParkingException;
+
+    int parkingRegistration(Authentication authentication, ParkingRegistrationRequestModel requestModel) throws ParkingException;
 }
 	

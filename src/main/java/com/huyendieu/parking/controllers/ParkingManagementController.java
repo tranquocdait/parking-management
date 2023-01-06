@@ -1,6 +1,8 @@
 package com.huyendieu.parking.controllers;
 
+import com.huyendieu.parking.constants.Constant;
 import com.huyendieu.parking.model.request.DashboardRequestModel;
+import com.huyendieu.parking.model.request.ParkingRegistrationRequestModel;
 import com.huyendieu.parking.model.request.TrackingParkingRequestModel;
 import com.huyendieu.parking.model.response.DashboardResponseModel;
 import com.huyendieu.parking.model.response.TrackingParkingAreaResponseModel;
@@ -28,13 +30,13 @@ public class ParkingManagementController {
     private ParkingAreaService parkingAreaService;
 
     @PostMapping("/tracking-management")
-    public ResponseEntity<?> trackingManage(Authentication authentication, @RequestBody TrackingParkingRequestModel trackingParkingRequestModel) {
+    public ResponseEntity<?> trackingManage(Authentication authentication, @RequestBody TrackingParkingRequestModel requestModel) {
         try {
             if (authentication == null || !authentication.isAuthenticated()) {
                 return new ResponseEntity(new ErrorResponseModel("Authentication don't exits!"), HttpStatus.BAD_REQUEST);
             }
             TrackingParkingAreaResponseModel responseModel =
-                    parkingAreaService.trackingManage(authentication, trackingParkingRequestModel);
+                    parkingAreaService.trackingManage(authentication, requestModel);
             return new ResponseEntity(new SuccessfulResponseModel(responseModel), HttpStatus.OK);
         } catch (Exception ex) {
             Map<String, String> errors = new HashMap<>();
@@ -44,14 +46,34 @@ public class ParkingManagementController {
     }
 
     @PostMapping("/vehicle-management")
-    public ResponseEntity<?> vehicleManage(Authentication authentication, @RequestBody TrackingParkingRequestModel trackingParkingRequestModel) {
+    public ResponseEntity<?> vehicleManage(Authentication authentication, @RequestBody TrackingParkingRequestModel requestModel) {
         try {
             if (authentication == null || !authentication.isAuthenticated()) {
                 return new ResponseEntity(new ErrorResponseModel("Authentication don't exits!"), HttpStatus.BAD_REQUEST);
             }
             VehicleManagementResponseModel responseModel =
-                    parkingAreaService.vehicleManage(authentication, trackingParkingRequestModel);
+                    parkingAreaService.vehicleManage(authentication, requestModel);
             return new ResponseEntity(new SuccessfulResponseModel(responseModel), HttpStatus.OK);
+        } catch (Exception ex) {
+            Map<String, String> errors = new HashMap<>();
+            errors.put("message", ex.getMessage());
+            return new ResponseEntity(new ErrorResponseModel(errors), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @PostMapping("/parking-registration")
+    public ResponseEntity<?> parkingRegistration(Authentication authentication, @RequestBody ParkingRegistrationRequestModel requestModel) {
+        try {
+            if (authentication == null || !authentication.isAuthenticated()) {
+                return new ResponseEntity(new ErrorResponseModel("Authentication don't exits!"), HttpStatus.BAD_REQUEST);
+            }
+            int status = parkingAreaService.parkingRegistration(authentication, requestModel);
+            Constant.ParkingRegistrationStatus registrationStatus = Constant.ParkingRegistrationStatus.findByKey(status);
+            if (registrationStatus != null) {
+                return new ResponseEntity(new SuccessfulResponseModel(Constant.ParkingRegistrationStatus.findByKey(status).getValue()), HttpStatus.OK);
+            } else {
+                return new ResponseEntity(new ErrorResponseModel("parking registration error!"), HttpStatus.BAD_REQUEST);
+            }
         } catch (Exception ex) {
             Map<String, String> errors = new HashMap<>();
             errors.put("message", ex.getMessage());

@@ -4,35 +4,37 @@ import com.huyendieu.parking.constants.Constant;
 import com.huyendieu.parking.constants.NotificationConstant;
 import com.huyendieu.parking.entities.ParkingAreaEntity;
 import com.huyendieu.parking.entities.ParkingHistoryEntity;
+import com.huyendieu.parking.entities.VehicleEntity;
 import com.huyendieu.parking.entities.summary.VehicleSummaryEntity;
 import com.huyendieu.parking.exception.ParkingException;
 import com.huyendieu.parking.model.dto.DashboardModel;
 import com.huyendieu.parking.model.request.DashboardRequestModel;
+import com.huyendieu.parking.model.request.ParkingRegistrationRequestModel;
 import com.huyendieu.parking.model.request.TrackingParkingRequestModel;
 import com.huyendieu.parking.model.response.*;
 import com.huyendieu.parking.repositories.ParkingAreaRepository;
+import com.huyendieu.parking.repositories.VehicleRepository;
 import com.huyendieu.parking.repositories.complex.ParkingHistoryComplexRepository;
 import com.huyendieu.parking.services.ParkingAreaService;
-import com.huyendieu.parking.utils.DateTimeUtils;
-import com.huyendieu.parking.utils.MapperUtils;
-import com.huyendieu.parking.utils.NotificationUtils;
-import com.huyendieu.parking.utils.QRCodeUtils;
+import com.huyendieu.parking.services.base.BaseService;
+import com.huyendieu.parking.utils.*;
+import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
-public class ParkingAreaServiceImpl implements ParkingAreaService {
+public class ParkingAreaServiceImpl extends BaseService implements ParkingAreaService {
 
     @Autowired
     private ParkingAreaRepository parkingAreaRepository;
+
+    @Autowired
+    private VehicleRepository vehicleRepository;
 
     @Autowired
     private ParkingHistoryComplexRepository parkingHistoryComplexRepository;
@@ -90,14 +92,12 @@ public class ParkingAreaServiceImpl implements ParkingAreaService {
         List<VehicleSummaryEntity> vehicles = parkingAreaEntity.getVehicles();
         List<VehicleResponseModel> vehicleResponseModels = new ArrayList<>();
         responseModel.setDataList(vehicleResponseModels);
-        if (parkingAreaEntity == null) {
+        if (CollectionUtils.isEmpty(vehicles)) {
             return responseModel;
         }
 
-        if (CollectionUtils.isEmpty(vehicles)) {
-            for (VehicleSummaryEntity vehicle : vehicles) {
-                vehicleResponseModels.add(mappingVehicle(vehicle));
-            }
+        for (VehicleSummaryEntity vehicle : vehicles) {
+            vehicleResponseModels.add(mappingVehicle(vehicle));
         }
 
         responseModel.setTotalRecord(vehicleResponseModels.size());
@@ -138,8 +138,87 @@ public class ParkingAreaServiceImpl implements ParkingAreaService {
         return responseModel;
     }
 
+    @Override
+    public int parkingRegistration(Authentication authentication, ParkingRegistrationRequestModel requestModel) throws ParkingException {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new ParkingException("authentication don't exist!");
+        }
+        String username = authentication.getPrincipal().toString();
+        ParkingAreaEntity parkingAreaEntity = parkingAreaRepository.findFirstByOwner(username);
+        if (parkingAreaEntity == null) {
+            throw new ParkingException("authentication don't exist!");
+        }
+
+        validateRequest(requestModel);
+        String vehicleId = requestModel.getVehicleId();
+        int status = requestModel.getStatus();
+        List<VehicleSummaryEntity> vehicles = parkingAreaEntity.getVehicles();
+        VehicleSummaryEntity vehicleSummaryEntity = null;
+        if (CollectionUtils.isEmpty(vehicles)) {
+            // the first register
+            vehicles = new ArrayList<>();
+            parkingAreaEntity.setVehicles(vehicles);
+        } else {
+            for (VehicleSummaryEntity vehicle : vehicles) {
+                String vehicleEntityId = vehicle.getId().toString();
+                if (vehicleId.equals(vehicleEntityId)) {
+                    vehicleSummaryEntity = vehicle;
+                }
+            }
+        }
+
+        if (vehicleSummaryEntity == null) {
+            Optional<VehicleEntity> vehicleEntityOptional = vehicleRepository.findFirstById(new ObjectId(vehicleId));
+            if (!vehicleEntityOptional.isPresent()) {
+                return 0;
+            }
+            VehicleEntity vehicleEntity = vehicleEntityOptional.get();
+            vehicleSummaryEntity = mappingVehicleSummary(vehicleEntity, status);
+            vehicles.add(vehicleSummaryEntity);
+        } else {
+            if (status == Constant.ParkingRegistrationStatus.ACCEPT.getKey()) {
+                vehicleSummaryEntity.setAcceptedParkingDate(currentDate());
+            }
+            vehicleSummaryEntity.setStatus(status);
+        }
+
+        parkingAreaRepository.save(parkingAreaEntity);
+        return status;
+    }
+
+    private void validateRequest(ParkingRegistrationRequestModel requestModel) throws ParkingException {
+        String vehicleId = requestModel.getVehicleId();
+        int status = requestModel.getStatus();
+        List<String> messageErrors = new ArrayList<>();
+        if (StringUtils.isEmpty(vehicleId)) {
+            messageErrors.add("vehicleId isn't blank or null!");
+        }
+        Constant.ParkingRegistrationStatus registrationStatus = Constant.ParkingRegistrationStatus.findByKey(status);
+        if (registrationStatus == null) {
+            messageErrors.add("vehicleId is incorrect!");
+        }
+        if (!CollectionUtils.isEmpty(messageErrors)) {
+            throw new ParkingException(String.join(", ", messageErrors));
+        }
+    }
+
+    private VehicleSummaryEntity mappingVehicleSummary(VehicleEntity vehicleEntity, int status) {
+        if (vehicleEntity == null) {
+            return null;
+        }
+        VehicleSummaryEntity vehicleSummary = MapperUtils.map(vehicleEntity, VehicleSummaryEntity.class);
+        vehicleSummary.setUsernameOwner(vehicleEntity.getOwner() != null
+                ? vehicleEntity.getOwner().getUserName() : Constant.Character.BLANK);
+        vehicleSummary.setRegisterParkingDate(currentDate());
+        if (status == Constant.ParkingRegistrationStatus.ACCEPT.getKey()) {
+            vehicleSummary.setAcceptedParkingDate(currentDate());
+        }
+        vehicleSummary.setStatus(status);
+        return vehicleSummary;
+    }
+
     private Map<String, Float> initDashboardData(List<String> labels) {
-        Map<String, Float> mapData = new HashMap<>();
+        Map<String, Float> mapData = new TreeMap<>();
         if (CollectionUtils.isEmpty(labels)) {
             return mapData;
         }
@@ -200,6 +279,15 @@ public class ParkingAreaServiceImpl implements ParkingAreaService {
                 vehicleEntity.getRegisterDate(),
                 Constant.DateTimeFormat.YYYY_MM_DD,
                 Constant.DateTimeFormat.DD_MM_YYYY));
+        vehicleResponseModel.setRegisterParkingDate(DateTimeUtils.convertDateTimeFormat(
+                vehicleEntity.getRegisterParkingDate(),
+                Constant.DateTimeFormat.YYYY_MM_DD_HH_MM_SS,
+                Constant.DateTimeFormat.DD_MM_YYYY_HH_MM_SS));
+        vehicleResponseModel.setAcceptedParkingDate(DateTimeUtils.convertDateTimeFormat(
+                vehicleEntity.getAcceptedParkingDate(),
+                Constant.DateTimeFormat.YYYY_MM_DD_HH_MM_SS,
+                Constant.DateTimeFormat.DD_MM_YYYY_HH_MM_SS));
+        vehicleResponseModel.setStatus(vehicleEntity.getStatus());
 
         return vehicleResponseModel;
     }
