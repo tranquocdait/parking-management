@@ -54,20 +54,22 @@ public class VehicleServiceImpl extends BaseService implements VehicleService {
         }
         String username = authentication.getPrincipal().toString();
         validateRequest(requestModel);
-        String vehicleId = requestModel.getVehicleId();
         String parkingAreaId = requestModel.getParkingAreaId();
         int status = requestModel.getStatus();
         Optional<ParkingAreaEntity> parkingAreaEntityOptional = parkingAreaRepository.findFistById(new ObjectId(parkingAreaId));
         if (!parkingAreaEntityOptional.isPresent()) {
             throw new ParkingException("Parking area don't exist!");
         }
-        VehicleEntity vehicleEntity = vehicleRepository.findByIdAndUsername(new ObjectId(vehicleId), username);
-        if (vehicleEntity == null) {
+        ParkingAreaEntity parkingAreaEntity = parkingAreaEntityOptional.get();
+        List<VehicleSummaryEntity> vehicles = parkingAreaEntity.getVehicles();
+
+        List<VehicleEntity> vehicleEntities = vehicleRepository.findAllByActiveIsTrue(username);
+        if (CollectionUtils.isEmpty(vehicleEntities)) {
             throw new ParkingException("Vehicle don't exist!");
         }
-        ParkingAreaEntity parkingAreaEntity = parkingAreaEntityOptional.get();
+        VehicleEntity vehicleEntity = vehicleEntities.get(0);
+        String vehicleId = vehicleEntity.getId().toString();
 
-        List<VehicleSummaryEntity> vehicles = parkingAreaEntity.getVehicles();
         VehicleSummaryEntity vehicleSummaryEntity = null;
         if (CollectionUtils.isEmpty(vehicles)) {
             // the first register
@@ -94,12 +96,8 @@ public class VehicleServiceImpl extends BaseService implements VehicleService {
     }
 
     private void validateRequest(ParkingRegistrationRequestModel requestModel) throws ParkingException {
-        String vehicleId = requestModel.getVehicleId();
         String parkingAreaId = requestModel.getParkingAreaId();
         List<String> messageErrors = new ArrayList<>();
-        if (StringUtils.isEmpty(vehicleId)) {
-            messageErrors.add("vehicleId isn't blank or null!");
-        }
 
         if (StringUtils.isEmpty(parkingAreaId)) {
             messageErrors.add("parkingAreaId isn't blank or null!");

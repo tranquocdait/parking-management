@@ -12,7 +12,7 @@ public class VehicleResponseModel {
     @JsonProperty("plate_number")
     private String plateNumber;
 
-    @JsonProperty("vehicle_Model")
+    @JsonProperty("vehicle_model")
     private String vehicleModel;
 
     @JsonProperty("vehicle_brand")

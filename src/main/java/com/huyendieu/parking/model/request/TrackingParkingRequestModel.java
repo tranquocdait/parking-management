@@ -1,19 +1,11 @@
 package com.huyendieu.parking.model.request;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.huyendieu.parking.model.request.base.SearchBaseRequestModel;
 import lombok.Data;
 
 @Data
-public class TrackingParkingRequestModel {
-
-    @JsonProperty("page")
-    private int page;
-
-    @JsonProperty("page_size")
-    private int pageSize;
-
-    @JsonProperty("keyword")
-    private String keyword;
+public class TrackingParkingRequestModel extends SearchBaseRequestModel {
     
     @JsonProperty("type")
     private int type;

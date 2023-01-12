@@ -4,10 +4,9 @@ import com.huyendieu.parking.exception.ParkingException;
 import com.huyendieu.parking.model.request.DashboardRequestModel;
 import com.huyendieu.parking.model.request.ParkingRegistrationRequestModel;
 import com.huyendieu.parking.model.request.TrackingParkingRequestModel;
-import com.huyendieu.parking.model.response.DashboardResponseModel;
-import com.huyendieu.parking.model.response.QRCodeResponseModel;
-import com.huyendieu.parking.model.response.TrackingParkingAreaResponseModel;
-import com.huyendieu.parking.model.response.VehicleManagementResponseModel;
+import com.huyendieu.parking.model.request.UnsubscribeParkingRequestModel;
+import com.huyendieu.parking.model.request.base.SearchBaseRequestModel;
+import com.huyendieu.parking.model.response.*;
 import org.springframework.security.core.Authentication;
 
 public interface ParkingAreaService {
@@ -24,5 +23,9 @@ public interface ParkingAreaService {
                                               DashboardRequestModel requestModel) throws ParkingException;
 
     int parkingRegistration(Authentication authentication, ParkingRegistrationRequestModel requestModel) throws ParkingException;
+
+    VehicleListResponseModel getVehicles(Authentication authentication, SearchBaseRequestModel requestModel) throws ParkingException;
+
+    int unsubscribeParkingArea(Authentication authentication, UnsubscribeParkingRequestModel requestModel) throws ParkingException;
 }
 	
