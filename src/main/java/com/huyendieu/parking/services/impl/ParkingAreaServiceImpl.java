@@ -205,19 +205,22 @@ public class ParkingAreaServiceImpl extends BaseService implements ParkingAreaSe
         String username = authentication.getPrincipal().toString();
         ParkingAreaEntity parkingAreaEntity = parkingAreaRepository.findFirstByOwner(username);
         List<VehicleSummaryEntity> vehicles = parkingAreaEntity.getVehicles();
-        List<ObjectId> vehicleIds = new ArrayList<>();
+        List<ObjectId> excludedIds = new ArrayList<>();
         if (!CollectionUtils.isEmpty(vehicles)) {
-            vehicleIds = vehicles.stream().map(ele -> ele.getId()).collect(Collectors.toList());
+            excludedIds = vehicles.stream().map(ele -> ele.getId()).collect(Collectors.toList());
         }
+        List<String> excludedVehicleIds = requestModel.getExcludedVehicleIds();
+        if (!CollectionUtils.isEmpty(excludedVehicleIds)) {
+            excludedIds.addAll(excludedVehicleIds.stream().map(ele -> new ObjectId(ele)).collect(Collectors.toList()));
+        }
+
         List<VehiclePopupResponseModel> vehiclePopupResponseModels = new ArrayList<>();
-        List<VehicleEntity> vehicleEntities = vehicleComplexRepository.findAllByPaging(requestModel, vehicleIds);
-        long totalRecord = vehicleComplexRepository.countAll(requestModel, vehicleIds);
+        List<VehicleEntity> vehicleEntities = vehicleComplexRepository.findAllByPaging(requestModel, excludedIds);
+        long totalRecord = vehicleComplexRepository.countAll(requestModel, excludedIds);
 
         if (!CollectionUtils.isEmpty(vehicleEntities)) {
             for (VehicleEntity vehicleEntity : vehicleEntities) {
-                if (!vehicleIds.contains(vehicleEntity.getId().toString())) {
-                    vehiclePopupResponseModels.add(mappingVehicleData(vehicleEntity));
-                }
+                vehiclePopupResponseModels.add(mappingVehicleData(vehicleEntity));
             }
         }
         return VehicleListResponseModel.builder()

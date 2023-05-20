@@ -24,8 +24,8 @@ public class VehicleComplexRepositoryImpl implements VehicleComplexRepository {
     private MongoTemplate mongoTemplate;
 
     @Override
-    public List<VehicleEntity> findAllByPaging(SearchBaseRequestModel requestModel, List<ObjectId> excludeIds) {
-        Query query = makeQuery(requestModel, excludeIds);
+    public List<VehicleEntity> findAllByPaging(SearchBaseRequestModel requestModel, List<ObjectId> excludedIds) {
+        Query query = makeQuery(requestModel, excludedIds);
         Pageable pageable = PageRequest.of(requestModel.getPage(), requestModel.getPageSize(),
                 Sort.by(Sort.Direction.DESC, "owner.user_name"));
         query.with(pageable);
@@ -33,15 +33,15 @@ public class VehicleComplexRepositoryImpl implements VehicleComplexRepository {
     }
 
     @Override
-    public long countAll(SearchBaseRequestModel requestModel, List<ObjectId> excludeIds) {
-        Query query = makeQuery(requestModel, excludeIds);
+    public long countAll(SearchBaseRequestModel requestModel, List<ObjectId> excludedIds) {
+        Query query = makeQuery(requestModel, excludedIds);
         return mongoTemplate.count(query, VehicleEntity.class);
     }
 
-    private Query makeQuery(SearchBaseRequestModel requestModel, List<ObjectId> excludeIds) {
+    private Query makeQuery(SearchBaseRequestModel requestModel, List<ObjectId> excludedIds) {
         Criteria criteria = Criteria.where("is_disable").ne(true);
-        if (!CollectionUtils.isEmpty(excludeIds)) {
-            criteria.and("_id").nin(excludeIds);
+        if (!CollectionUtils.isEmpty(excludedIds)) {
+            criteria.and("_id").nin(excludedIds);
         }
         String keyword = requestModel.getKeyword();
         if (!StringUtils.isEmpty(keyword)) {
