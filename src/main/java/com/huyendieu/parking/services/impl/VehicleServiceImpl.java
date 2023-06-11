@@ -2,15 +2,22 @@ package com.huyendieu.parking.services.impl;
 
 import com.huyendieu.parking.constants.Constant;
 import com.huyendieu.parking.entities.ParkingAreaEntity;
+import com.huyendieu.parking.entities.ParkingHistoryEntity;
 import com.huyendieu.parking.entities.VehicleEntity;
+import com.huyendieu.parking.entities.summary.ParkingAreaSummaryEntity;
 import com.huyendieu.parking.entities.summary.VehicleSummaryEntity;
 import com.huyendieu.parking.exception.ParkingException;
 import com.huyendieu.parking.model.request.ParkingRegistrationRequestModel;
+import com.huyendieu.parking.model.request.TrackingParkingRequestModel;
 import com.huyendieu.parking.model.response.QRCodeResponseModel;
+import com.huyendieu.parking.model.response.TrackingVehicleItemResponseModel;
+import com.huyendieu.parking.model.response.TrackingVehicleResponseModel;
 import com.huyendieu.parking.repositories.ParkingAreaRepository;
 import com.huyendieu.parking.repositories.VehicleRepository;
+import com.huyendieu.parking.repositories.complex.VehicleComplexRepository;
 import com.huyendieu.parking.services.VehicleService;
 import com.huyendieu.parking.services.base.BaseService;
+import com.huyendieu.parking.utils.DateTimeUtils;
 import com.huyendieu.parking.utils.MapperUtils;
 import com.huyendieu.parking.utils.QRCodeUtils;
 import com.huyendieu.parking.utils.StringUtils;
@@ -32,6 +39,9 @@ public class VehicleServiceImpl extends BaseService implements VehicleService {
 
     @Autowired
     private ParkingAreaRepository parkingAreaRepository;
+
+    @Autowired
+    private VehicleComplexRepository vehicleComplexRepository;
 
     @Override
     public QRCodeResponseModel generateQR(String username) throws ParkingException {
@@ -93,6 +103,50 @@ public class VehicleServiceImpl extends BaseService implements VehicleService {
 
         parkingAreaRepository.save(parkingAreaEntity);
         return status;
+    }
+
+    @Override
+    public TrackingVehicleResponseModel trackingManage(Authentication authentication, TrackingParkingRequestModel trackingParkingRequestModel)
+            throws ParkingException {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new ParkingException("authentication don't exist!");
+        }
+        String username = authentication.getPrincipal().toString();
+
+        List<TrackingVehicleItemResponseModel> trackingVehicleItemResponseModels = new ArrayList<>();
+        List<ParkingHistoryEntity> parkingHistoryEntities = vehicleComplexRepository.findAllByPaging(username, trackingParkingRequestModel);
+        long totalRecord = vehicleComplexRepository.countAll(username, trackingParkingRequestModel);
+        if (!CollectionUtils.isEmpty(parkingHistoryEntities)) {
+            for (ParkingHistoryEntity parkingHistoryEntity : parkingHistoryEntities) {
+                trackingVehicleItemResponseModels.add(mappingHistoryData(parkingHistoryEntity));
+            }
+        }
+        return TrackingVehicleResponseModel.builder()
+                .dataList(trackingVehicleItemResponseModels)
+                .totalRecord(totalRecord)
+                .build();
+    }
+
+    private TrackingVehicleItemResponseModel mappingHistoryData(ParkingHistoryEntity entity) {
+        TrackingVehicleItemResponseModel model = TrackingVehicleItemResponseModel.builder()
+                .checkInDate(DateTimeUtils.convertDateTimeFormat(
+                        entity.getCheckInDate(),
+                        Constant.DateTimeFormat.YYYY_MM_DD_HH_MM_SS,
+                        Constant.DateTimeFormat.DD_MM_YYYY_HH_MM_SS
+                ))
+                .checkOutDate(DateTimeUtils.convertDateTimeFormat(
+                        entity.getCheckOutDate(),
+                        Constant.DateTimeFormat.YYYY_MM_DD_HH_MM_SS,
+                        Constant.DateTimeFormat.DD_MM_YYYY_HH_MM_SS
+                ))
+                .build();
+
+        ParkingAreaSummaryEntity parkingAreaSummaryEntity = entity.getParkingArea();
+        if (parkingAreaSummaryEntity != null) {
+            model.setParkingId(parkingAreaSummaryEntity.getId().toString());
+            model.setPackingOwner(parkingAreaSummaryEntity.getUsernameOwner());
+        }
+        return model;
     }
 
     private void validateRequest(ParkingRegistrationRequestModel requestModel) throws ParkingException {

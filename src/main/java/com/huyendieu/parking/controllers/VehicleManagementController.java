@@ -2,6 +2,8 @@ package com.huyendieu.parking.controllers;
 
 import com.huyendieu.parking.constants.Constant;
 import com.huyendieu.parking.model.request.ParkingRegistrationRequestModel;
+import com.huyendieu.parking.model.request.TrackingParkingRequestModel;
+import com.huyendieu.parking.model.response.TrackingVehicleResponseModel;
 import com.huyendieu.parking.model.response.base.ErrorResponseModel;
 import com.huyendieu.parking.model.response.base.SuccessfulResponseModel;
 import com.huyendieu.parking.services.VehicleService;
@@ -37,6 +39,22 @@ public class VehicleManagementController {
             } else {
                 return new ResponseEntity(new ErrorResponseModel("parking registration error!"), HttpStatus.BAD_REQUEST);
             }
+        } catch (Exception ex) {
+            Map<String, String> errors = new HashMap<>();
+            errors.put("message", ex.getMessage());
+            return new ResponseEntity(new ErrorResponseModel(errors), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @PostMapping("/tracking-management")
+    public ResponseEntity<?> trackingManage(Authentication authentication, @RequestBody TrackingParkingRequestModel requestModel) {
+        try {
+            if (authentication == null || !authentication.isAuthenticated()) {
+                return new ResponseEntity(new ErrorResponseModel("Authentication don't exits!"), HttpStatus.BAD_REQUEST);
+            }
+            TrackingVehicleResponseModel responseModel =
+                    vehicleService.trackingManage(authentication, requestModel);
+            return new ResponseEntity(new SuccessfulResponseModel(responseModel), HttpStatus.OK);
         } catch (Exception ex) {
             Map<String, String> errors = new HashMap<>();
             errors.put("message", ex.getMessage());
