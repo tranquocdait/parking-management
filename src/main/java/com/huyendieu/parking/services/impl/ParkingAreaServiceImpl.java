@@ -8,10 +8,7 @@ import com.huyendieu.parking.entities.VehicleEntity;
 import com.huyendieu.parking.entities.summary.VehicleSummaryEntity;
 import com.huyendieu.parking.exception.ParkingException;
 import com.huyendieu.parking.model.dto.DashboardModel;
-import com.huyendieu.parking.model.request.DashboardRequestModel;
-import com.huyendieu.parking.model.request.ParkingRegistrationRequestModel;
-import com.huyendieu.parking.model.request.TrackingParkingRequestModel;
-import com.huyendieu.parking.model.request.UnsubscribeParkingRequestModel;
+import com.huyendieu.parking.model.request.*;
 import com.huyendieu.parking.model.request.base.SearchBaseRequestModel;
 import com.huyendieu.parking.model.response.*;
 import com.huyendieu.parking.repositories.ParkingAreaRepository;
@@ -198,7 +195,7 @@ public class ParkingAreaServiceImpl extends BaseService implements ParkingAreaSe
     }
 
     @Override
-    public VehicleListResponseModel getVehicles(Authentication authentication, SearchBaseRequestModel requestModel) throws ParkingException {
+    public VehicleListResponseModel getVehicles(Authentication authentication, VehicleRequestModel requestModel) throws ParkingException {
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new ParkingException("authentication don't exist!");
         }

@@ -1,11 +1,7 @@
 package com.huyendieu.parking.controllers;
 
 import com.huyendieu.parking.constants.Constant;
-import com.huyendieu.parking.model.request.DashboardRequestModel;
-import com.huyendieu.parking.model.request.ParkingRegistrationRequestModel;
-import com.huyendieu.parking.model.request.TrackingParkingRequestModel;
-import com.huyendieu.parking.model.request.UnsubscribeParkingRequestModel;
-import com.huyendieu.parking.model.request.base.SearchBaseRequestModel;
+import com.huyendieu.parking.model.request.*;
 import com.huyendieu.parking.model.response.DashboardResponseModel;
 import com.huyendieu.parking.model.response.TrackingParkingAreaResponseModel;
 import com.huyendieu.parking.model.response.VehicleListResponseModel;
@@ -120,7 +116,7 @@ public class ParkingManagementController {
     }
 
     @PostMapping("/vehicles")
-    public ResponseEntity<?> getVehicles(Authentication authentication, @RequestBody SearchBaseRequestModel requestModel) {
+    public ResponseEntity<?> getVehicles(Authentication authentication, @RequestBody VehicleRequestModel requestModel) {
         try {
             if (authentication == null || !authentication.isAuthenticated()) {
                 return new ResponseEntity(new ErrorResponseModel("Authentication don't exits!"), HttpStatus.BAD_REQUEST);
