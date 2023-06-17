@@ -19,6 +19,7 @@ import com.huyendieu.parking.services.UserService;
 import com.huyendieu.parking.services.base.BaseService;
 import com.huyendieu.parking.utils.DateTimeUtils;
 import com.huyendieu.parking.utils.MapperUtils;
+import com.huyendieu.parking.utils.UserUtils;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -61,10 +62,7 @@ public class UserServiceImpl extends BaseService implements UserService {
 
     @Override
     public UserResponseModel getMyProfile(Authentication authentication) throws ParkingException {
-        if (authentication.getPrincipal() == null) {
-            throw new ParkingException("authentication don't exist!");
-        }
-        String username = (String) authentication.getPrincipal();
+        String username = UserUtils.getUserName(authentication);
         Optional<UserEntity> optionalUserEntity = userRepository.findByUserNameIgnoreCase(username);
         if (!optionalUserEntity.isPresent()) {
             throw new ParkingException("authentication don't exist!");

@@ -9,7 +9,6 @@ import com.huyendieu.parking.entities.summary.VehicleSummaryEntity;
 import com.huyendieu.parking.exception.ParkingException;
 import com.huyendieu.parking.model.dto.DashboardModel;
 import com.huyendieu.parking.model.request.*;
-import com.huyendieu.parking.model.request.base.SearchBaseRequestModel;
 import com.huyendieu.parking.model.response.*;
 import com.huyendieu.parking.repositories.ParkingAreaRepository;
 import com.huyendieu.parking.repositories.VehicleRepository;
@@ -62,10 +61,7 @@ public class ParkingAreaServiceImpl extends BaseService implements ParkingAreaSe
     @Override
     public TrackingParkingAreaResponseModel trackingManage(Authentication authentication, TrackingParkingRequestModel trackingParkingRequestModel)
             throws ParkingException {
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new ParkingException("authentication don't exist!");
-        }
-        String username = authentication.getPrincipal().toString();
+        String username = UserUtils.getUserName(authentication);
 
         List<TrackingParkingAreaItemResponseModel> trackingParkingAreaModels = new ArrayList<>();
         List<ParkingHistoryEntity> parkingHistoryEntities = parkingHistoryComplexRepository.findAllByPaging(username, trackingParkingRequestModel);
@@ -85,10 +81,7 @@ public class ParkingAreaServiceImpl extends BaseService implements ParkingAreaSe
     public VehicleManagementResponseModel vehicleManage(Authentication authentication,
                                                         TrackingParkingRequestModel trackingParkingRequestModel) throws ParkingException {
         VehicleManagementResponseModel responseModel = new VehicleManagementResponseModel();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new ParkingException("authentication don't exist!");
-        }
-        String username = authentication.getPrincipal().toString();
+        String username = UserUtils.getUserName(authentication);
         ParkingAreaEntity parkingAreaEntity = parkingAreaRepository.findFirstByOwner(username);
         if (parkingAreaEntity == null) {
             return responseModel;
@@ -111,10 +104,7 @@ public class ParkingAreaServiceImpl extends BaseService implements ParkingAreaSe
 
     @Override
     public DashboardResponseModel checkingStatistics(Authentication authentication, DashboardRequestModel requestModel) throws ParkingException {
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new ParkingException("authentication don't exist!");
-        }
-        String username = authentication.getPrincipal().toString();
+        String username = UserUtils.getUserName(authentication);
         int dashboardType = requestModel.getType();
 
         DashboardResponseModel responseModel = new DashboardResponseModel();
@@ -145,10 +135,7 @@ public class ParkingAreaServiceImpl extends BaseService implements ParkingAreaSe
 
     @Override
     public int parkingRegistration(Authentication authentication, ParkingRegistrationRequestModel requestModel) throws ParkingException {
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new ParkingException("authentication don't exist!");
-        }
-        String username = authentication.getPrincipal().toString();
+        String username = UserUtils.getUserName(authentication);
         ParkingAreaEntity parkingAreaEntity = parkingAreaRepository.findFirstByOwner(username);
         if (parkingAreaEntity == null) {
             throw new ParkingException("authentication don't exist!");
@@ -196,10 +183,7 @@ public class ParkingAreaServiceImpl extends BaseService implements ParkingAreaSe
 
     @Override
     public VehicleListResponseModel getVehicles(Authentication authentication, VehicleRequestModel requestModel) throws ParkingException {
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new ParkingException("authentication don't exist!");
-        }
-        String username = authentication.getPrincipal().toString();
+        String username = UserUtils.getUserName(authentication);
         ParkingAreaEntity parkingAreaEntity = parkingAreaRepository.findFirstByOwner(username);
         List<VehicleSummaryEntity> vehicles = parkingAreaEntity.getVehicles();
         List<ObjectId> excludedIds = new ArrayList<>();
@@ -227,11 +211,32 @@ public class ParkingAreaServiceImpl extends BaseService implements ParkingAreaSe
     }
 
     @Override
-    public int unsubscribeParkingArea(Authentication authentication, UnsubscribeParkingRequestModel requestModel) throws ParkingException {
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new ParkingException("authentication don't exist!");
+    public CapacityResponseModel getCapacityInformation(Authentication authentication) throws ParkingException {
+        String username = UserUtils.getUserName(authentication);
+        ParkingAreaEntity parkingAreaEntity = parkingAreaRepository.findFirstByOwner(username);
+        return getCapacityByParkingArea(parkingAreaEntity);
+    }
+
+    @Override
+    public CapacityResponseModel getCapacityByParkingArea(ParkingAreaEntity parkingAreaEntity) {
+        if (parkingAreaEntity == null) {
+            return CapacityResponseModel.builder().build();
         }
-        String username = authentication.getPrincipal().toString();
+        TrackingParkingRequestModel trackingParkingRequestModel = new TrackingParkingRequestModel();
+        trackingParkingRequestModel.setType(Constant.CheckParkingCode.CHECK_IN.getKey());
+
+        String username = parkingAreaEntity.getOwner().getUserName();
+        long occupation = parkingHistoryComplexRepository.countAll(username, trackingParkingRequestModel);
+
+        return CapacityResponseModel.builder()
+                .capacity(parkingAreaEntity.getCapacity())
+                .occupation((int) occupation)
+                .build();
+    }
+
+    @Override
+    public int unsubscribeParkingArea(Authentication authentication, UnsubscribeParkingRequestModel requestModel) throws ParkingException {
+        String username = UserUtils.getUserName(authentication);
         ParkingAreaEntity parkingAreaEntity = parkingAreaRepository.findFirstByOwner(username);
         if (parkingAreaEntity == null) {
             throw new ParkingException("authentication don't exist!");

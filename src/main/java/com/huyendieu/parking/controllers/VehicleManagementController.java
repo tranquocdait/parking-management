@@ -29,9 +29,6 @@ public class VehicleManagementController {
     @PostMapping("/parking-registration")
     public ResponseEntity<?> parkingRegistration(Authentication authentication, @RequestBody ParkingRegistrationRequestModel requestModel) {
         try {
-            if (authentication == null || !authentication.isAuthenticated()) {
-                return new ResponseEntity(new ErrorResponseModel("Authentication don't exits!"), HttpStatus.BAD_REQUEST);
-            }
             int status = vehicleService.parkingRegistration(authentication, requestModel);
             Constant.ParkingRegistrationStatus registrationStatus = Constant.ParkingRegistrationStatus.findByKey(status);
             if (registrationStatus != null) {
@@ -49,9 +46,6 @@ public class VehicleManagementController {
     @PostMapping("/tracking-management")
     public ResponseEntity<?> trackingManage(Authentication authentication, @RequestBody TrackingParkingRequestModel requestModel) {
         try {
-            if (authentication == null || !authentication.isAuthenticated()) {
-                return new ResponseEntity(new ErrorResponseModel("Authentication don't exits!"), HttpStatus.BAD_REQUEST);
-            }
             TrackingVehicleResponseModel responseModel =
                     vehicleService.trackingManage(authentication, requestModel);
             return new ResponseEntity(new SuccessfulResponseModel(responseModel), HttpStatus.OK);

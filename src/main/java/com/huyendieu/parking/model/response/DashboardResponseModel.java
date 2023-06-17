@@ -13,6 +13,7 @@ public class DashboardResponseModel {
 
     @JsonProperty("total")
     private float total;
+
     @JsonProperty("data")
     private List<Float> data;
 }

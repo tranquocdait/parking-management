@@ -17,10 +17,7 @@ import com.huyendieu.parking.repositories.VehicleRepository;
 import com.huyendieu.parking.repositories.complex.VehicleComplexRepository;
 import com.huyendieu.parking.services.VehicleService;
 import com.huyendieu.parking.services.base.BaseService;
-import com.huyendieu.parking.utils.DateTimeUtils;
-import com.huyendieu.parking.utils.MapperUtils;
-import com.huyendieu.parking.utils.QRCodeUtils;
-import com.huyendieu.parking.utils.StringUtils;
+import com.huyendieu.parking.utils.*;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -59,10 +56,7 @@ public class VehicleServiceImpl extends BaseService implements VehicleService {
 
     @Override
     public int parkingRegistration(Authentication authentication, ParkingRegistrationRequestModel requestModel) throws ParkingException {
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new ParkingException("authentication don't exist!");
-        }
-        String username = authentication.getPrincipal().toString();
+        String username = UserUtils.getUserName(authentication);
         validateRequest(requestModel);
         String parkingAreaId = requestModel.getParkingAreaId();
         int status = requestModel.getStatus();
@@ -108,10 +102,7 @@ public class VehicleServiceImpl extends BaseService implements VehicleService {
     @Override
     public TrackingVehicleResponseModel trackingManage(Authentication authentication, TrackingParkingRequestModel trackingParkingRequestModel)
             throws ParkingException {
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new ParkingException("authentication don't exist!");
-        }
-        String username = authentication.getPrincipal().toString();
+        String username = UserUtils.getUserName(authentication);
 
         List<TrackingVehicleItemResponseModel> trackingVehicleItemResponseModels = new ArrayList<>();
         List<ParkingHistoryEntity> parkingHistoryEntities = vehicleComplexRepository.findAllByPaging(username, trackingParkingRequestModel);

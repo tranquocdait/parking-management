@@ -40,4 +40,7 @@ public class ParkingAreaEntity extends BaseEntity {
 
     @Field(name = "is_disable")
     private boolean disable;
+
+    @Field(name = "capacity")
+    private int capacity;
 }

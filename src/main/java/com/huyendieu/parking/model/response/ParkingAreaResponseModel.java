@@ -20,4 +20,7 @@ public class ParkingAreaResponseModel {
 
     @JsonProperty("commune")
     private String commune;
+
+    @JsonProperty("capacity")
+    private int capacity;
 }

@@ -1,8 +1,8 @@
 package com.huyendieu.parking.services;
 
+import com.huyendieu.parking.entities.ParkingAreaEntity;
 import com.huyendieu.parking.exception.ParkingException;
 import com.huyendieu.parking.model.request.*;
-import com.huyendieu.parking.model.request.base.SearchBaseRequestModel;
 import com.huyendieu.parking.model.response.*;
 import org.springframework.security.core.Authentication;
 
@@ -24,5 +24,9 @@ public interface ParkingAreaService {
     VehicleListResponseModel getVehicles(Authentication authentication, VehicleRequestModel requestModel) throws ParkingException;
 
     int unsubscribeParkingArea(Authentication authentication, UnsubscribeParkingRequestModel requestModel) throws ParkingException;
+
+    CapacityResponseModel getCapacityInformation(Authentication authentication) throws ParkingException;
+
+    CapacityResponseModel getCapacityByParkingArea(ParkingAreaEntity parkingAreaEntity);
 }
 	

@@ -9,14 +9,17 @@ import com.huyendieu.parking.entities.summary.ParkingAreaSummaryEntity;
 import com.huyendieu.parking.entities.summary.VehicleSummaryEntity;
 import com.huyendieu.parking.exception.ParkingException;
 import com.huyendieu.parking.model.notification.NotificationModel;
+import com.huyendieu.parking.model.response.CapacityResponseModel;
 import com.huyendieu.parking.model.response.CheckParkingResponseModel;
 import com.huyendieu.parking.repositories.ParkingAreaRepository;
 import com.huyendieu.parking.repositories.ParkingHistoryRepository;
 import com.huyendieu.parking.repositories.VehicleRepository;
+import com.huyendieu.parking.services.ParkingAreaService;
 import com.huyendieu.parking.services.PaymentService;
 import com.huyendieu.parking.services.base.BaseService;
 import com.huyendieu.parking.utils.MapperUtils;
 import com.huyendieu.parking.utils.NotificationUtils;
+import com.huyendieu.parking.utils.UserUtils;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
@@ -43,12 +46,15 @@ public class PaymentServiceImpl extends BaseService implements PaymentService {
     @Autowired
     private MessageSource messageSource;
 
+    @Autowired
+    private ParkingAreaService parkingAreaService;
+
     @Override
     public CheckParkingResponseModel checkParking(Authentication authentication, String parkingAreaId) throws ParkingException {
-        if (authentication.getPrincipal() == null) {
+        if (!UserUtils.isVehicleRole(authentication)) {
             throw new ParkingException("authentication don't exist!");
         }
-        String username = (String) authentication.getPrincipal();
+        String username = UserUtils.getUserName(authentication);
         List<ParkingHistoryEntity> parkingHistoryEntities =
                 parkingHistoryRepository.findUserByNotCheckOut(username, new ObjectId(parkingAreaId));
         if (!CollectionUtils.isEmpty(parkingHistoryEntities)) {
@@ -60,6 +66,11 @@ public class PaymentServiceImpl extends BaseService implements PaymentService {
                     .message(Constant.CheckParkingCode.CHECK_OUT.getValue())
                     .build();
         } else {
+            if (!isAvailableCapacity(parkingAreaId)) {
+                String messageError = messageSource.getMessage("parking-area-no-longer-available",
+                        new Object[]{}, LocaleContextHolder.getLocale());
+                throw new ParkingException(messageError);
+            }
             ParkingHistoryEntity parkingHistoryEntity = checkIn(parkingAreaId, username);
             checkingNotification(parkingAreaId, getPlateNumber(parkingHistoryEntity), Constant.CheckParkingCode.CHECK_IN.getCode());
             return CheckParkingResponseModel.builder()
@@ -68,6 +79,16 @@ public class PaymentServiceImpl extends BaseService implements PaymentService {
                     .message(Constant.CheckParkingCode.CHECK_IN.getValue())
                     .build();
         }
+    }
+
+    private boolean isAvailableCapacity(String parkingAreaId) {
+        Optional<ParkingAreaEntity> optionalParkingAreaEntity = parkingAreaRepository.findFistById(new ObjectId(parkingAreaId));
+        if (!optionalParkingAreaEntity.isPresent()) {
+            return false;
+        }
+        ParkingAreaEntity parkingAreaEntity = optionalParkingAreaEntity.get();
+        CapacityResponseModel capacityInformation = parkingAreaService.getCapacityByParkingArea(parkingAreaEntity);
+        return capacityInformation.getOccupation() <= capacityInformation.getCapacity();
     }
 
     private ParkingHistoryEntity checkIn(String parkingAreaId, String username) throws ParkingException {
