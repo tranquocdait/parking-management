@@ -1,9 +1,6 @@
 package com.huyendieu.parking.constants;
 
 
-import java.util.HashMap;
-import java.util.Map;
-
 public class Constant {
 
     public enum Character {
@@ -72,13 +69,11 @@ public class Constant {
 
         private final String value;
 
-        private Map<Integer, ParkingRegistrationStatus> mapData = new HashMap<>();
 
         ParkingRegistrationStatus(Integer key, String code, String value) {
             this.key = key;
             this.code = code;
             this.value = value;
-            mapData.put(this.key, this);
         }
 
         public Integer getKey() {
@@ -97,6 +92,46 @@ public class Constant {
             for (ParkingRegistrationStatus status : values()) {
                 if (status.key == key) {
                     return status;
+                }
+            }
+            return null;
+        }
+    }
+
+    public enum TicketType {
+        FREE(1, "FREE", "Free ticket"),
+        MONTHLY(2, "MONTHLY", "Monthly ticket"),
+        YEARLY(3, "YEARLY", "Yearly ticket"),
+        ONE_TIME(4, "ONE_TIME", "One time ticket");
+
+        private final Integer key;
+
+        private final String code;
+
+        private final String value;
+
+        TicketType(Integer key, String code, String value) {
+            this.key = key;
+            this.code = code;
+            this.value = value;
+        }
+
+        public Integer getKey() {
+            return key;
+        }
+
+        public String getCode() {
+            return code;
+        }
+
+        public String getValue() {
+            return value;
+        }
+
+        public static TicketType findByKey(Integer key) {
+            for (TicketType ticket : values()) {
+                if (ticket.key == key) {
+                    return ticket;
                 }
             }
             return null;

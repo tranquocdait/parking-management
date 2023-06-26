@@ -17,6 +17,7 @@ import com.huyendieu.parking.repositories.VehicleRepository;
 import com.huyendieu.parking.services.ParkingAreaService;
 import com.huyendieu.parking.services.PaymentService;
 import com.huyendieu.parking.services.base.BaseService;
+import com.huyendieu.parking.services.common.ParkingAreaSummaryService;
 import com.huyendieu.parking.utils.MapperUtils;
 import com.huyendieu.parking.utils.NotificationUtils;
 import com.huyendieu.parking.utils.UserUtils;
@@ -48,6 +49,9 @@ public class PaymentServiceImpl extends BaseService implements PaymentService {
 
     @Autowired
     private ParkingAreaService parkingAreaService;
+
+    @Autowired
+    private ParkingAreaSummaryService parkingAreaSummaryService;
 
     @Override
     public CheckParkingResponseModel checkParking(Authentication authentication, String parkingAreaId) throws ParkingException {
@@ -92,7 +96,7 @@ public class PaymentServiceImpl extends BaseService implements PaymentService {
     }
 
     private ParkingHistoryEntity checkIn(String parkingAreaId, String username) throws ParkingException {
-        ParkingAreaSummaryEntity parkingArea = mappingParkingAreaSummary(parkingAreaId);
+        ParkingAreaSummaryEntity parkingArea = parkingAreaSummaryService.mappingSummary(parkingAreaId);
         VehicleSummaryEntity vehicle = mappingVehicleSummary(username);
         ParkingHistoryEntity parkingHistoryEntity = ParkingHistoryEntity.builder()
                 .checkInDate(currentDate())
@@ -117,12 +121,12 @@ public class PaymentServiceImpl extends BaseService implements PaymentService {
 
     private void checkingNotification(String parkingAreaId, String plateNumber, String type) throws ParkingException {
         NotificationModel notificationModel = null;
-        if (type == Constant.CheckParkingCode.CHECK_IN.getCode()) {
+        if (Constant.CheckParkingCode.CHECK_IN.getCode().equals(type)) {
             String message = messageSource.getMessage("check-in-notification",
                     new Object[]{plateNumber}, LocaleContextHolder.getLocale());
             notificationModel = new NotificationModel(NotificationConstant.NotificationType.CHECK_IN.getCode(), message);
         }
-        if (type == Constant.CheckParkingCode.CHECK_OUT.getCode()) {
+        if (Constant.CheckParkingCode.CHECK_OUT.getCode().equals(type)) {
             String message = messageSource.getMessage("check-out-notification",
                     new Object[]{plateNumber}, LocaleContextHolder.getLocale());
             notificationModel = new NotificationModel(NotificationConstant.NotificationType.CHECK_OUT.getCode(), message);
@@ -142,19 +146,6 @@ public class PaymentServiceImpl extends BaseService implements PaymentService {
         }
 
         return vehicle.getPlateNumber();
-    }
-
-
-    private ParkingAreaSummaryEntity mappingParkingAreaSummary(String parkingAreaId) {
-        Optional<ParkingAreaEntity> optionalParkingAreaEntity = parkingAreaRepository.findFistById(new ObjectId(parkingAreaId));
-        if (!optionalParkingAreaEntity.isPresent()) {
-            return new ParkingAreaSummaryEntity();
-        }
-        ParkingAreaEntity parkingAreaEntity = optionalParkingAreaEntity.get();
-        ParkingAreaSummaryEntity parkingAreaSummaryEntity = MapperUtils.map(parkingAreaEntity, ParkingAreaSummaryEntity.class);
-        parkingAreaSummaryEntity.setUsernameOwner(parkingAreaEntity.getOwner() != null ?
-                parkingAreaEntity.getOwner().getUserName() : Constant.Character.BLANK);
-        return parkingAreaSummaryEntity;
     }
 
     private VehicleSummaryEntity mappingVehicleSummary(String username) {
