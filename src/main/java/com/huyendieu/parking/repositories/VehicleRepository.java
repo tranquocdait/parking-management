@@ -15,9 +15,9 @@ public interface VehicleRepository extends MongoRepository<VehicleEntity, String
     @Query("{ '_id': ?0, 'owner.user_name' : ?1}")
     VehicleEntity findByIdAndUsername(ObjectId id, String userName);
 
-    @Query("{ 'owner.id' : ?0, 'disable': false }")
+    @Query("{ 'owner.id' : ?0, 'is_disable': false }")
     List<VehicleEntity> findAllByOwnerId(ObjectId id);
 
-    @Query("{ 'owner.user_name' : ?0, 'disable': false, 'active': true }")
+    @Query("{ 'owner.user_name' : ?0, 'is_disable': false, 'is_active': true }")
     List<VehicleEntity> findAllByActiveIsTrue(String username);
 }

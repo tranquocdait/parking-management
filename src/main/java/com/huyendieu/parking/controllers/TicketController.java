@@ -1,6 +1,8 @@
 package com.huyendieu.parking.controllers;
 
+import com.huyendieu.parking.model.request.SearchTicketRequestModel;
 import com.huyendieu.parking.model.request.TicketRequestModel;
+import com.huyendieu.parking.model.response.TicketListResponseModel;
 import com.huyendieu.parking.model.response.base.ErrorResponseModel;
 import com.huyendieu.parking.model.response.base.SuccessfulResponseModel;
 import com.huyendieu.parking.model.response.common.base.ListComboboxResponseModel;
@@ -22,6 +24,19 @@ public class TicketController {
 
     @Autowired
     private TicketService ticketService;
+
+    @GetMapping("")
+    public ResponseEntity<?> list(Authentication authentication, @Valid @RequestBody SearchTicketRequestModel requestModel) {
+        try {
+            String userName = UserUtils.getUserName(authentication);
+            TicketListResponseModel responseModel = ticketService.getTickets(userName, requestModel);
+            return new ResponseEntity<>(new SuccessfulResponseModel(responseModel), HttpStatus.OK);
+        } catch (Exception ex) {
+            Map<String, String> errors = new HashMap<>();
+            errors.put("message", ex.getMessage());
+            return new ResponseEntity<>(new ErrorResponseModel(errors), HttpStatus.BAD_REQUEST);
+        }
+    }
 
     @PostMapping("")
     public ResponseEntity<?> create(Authentication authentication, @Valid @RequestBody TicketRequestModel requestModel) {
