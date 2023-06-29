@@ -1,6 +1,7 @@
 package com.huyendieu.parking.utils;
 
 import com.huyendieu.parking.constants.Constant;
+import com.huyendieu.parking.exception.ParkingException;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -59,7 +60,17 @@ public class DateTimeUtils {
         } catch (Exception ex) {
             return Constant.Character.BLANK;
         }
-
     }
 
+    public static LocalDate convertStringToDate(String date, String formatFrom) throws ParkingException {
+        if (StringUtils.isEmpty(date)) {
+            throw new ParkingException("date is not null");
+        }
+        try {
+            DateTimeFormatter formatterFrom = DateTimeFormatter.ofPattern(formatFrom);
+            return LocalDate.parse(date, formatterFrom);
+        } catch (Exception ex) {
+            throw new ParkingException(ex.getMessage());
+        }
+    }
 }

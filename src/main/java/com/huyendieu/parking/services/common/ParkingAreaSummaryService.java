@@ -5,7 +5,7 @@ import com.huyendieu.parking.exception.ParkingException;
 
 public interface ParkingAreaSummaryService {
 
-    ParkingAreaSummaryEntity mappingSummary(String parkingAreaId) throws ParkingException;
+    ParkingAreaSummaryEntity mappingSummaryById(String parkingAreaId) throws ParkingException;
 
     ParkingAreaSummaryEntity mappingSummaryByUsername(String userName) throws ParkingException;
 }

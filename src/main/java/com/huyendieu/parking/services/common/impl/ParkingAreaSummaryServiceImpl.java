@@ -20,7 +20,7 @@ public class ParkingAreaSummaryServiceImpl implements ParkingAreaSummaryService 
     private ParkingAreaRepository parkingAreaRepository;
 
     @Override
-    public ParkingAreaSummaryEntity mappingSummary(String parkingAreaId) throws ParkingException {
+    public ParkingAreaSummaryEntity mappingSummaryById(String parkingAreaId) throws ParkingException {
         Optional<ParkingAreaEntity> optionalParkingAreaEntity = parkingAreaRepository.findFistById(new ObjectId(parkingAreaId));
         if (optionalParkingAreaEntity.isEmpty()) {
             return new ParkingAreaSummaryEntity();

@@ -4,7 +4,6 @@ import com.huyendieu.parking.constants.Constant;
 import com.huyendieu.parking.constants.NotificationConstant;
 import com.huyendieu.parking.entities.ParkingAreaEntity;
 import com.huyendieu.parking.entities.ParkingHistoryEntity;
-import com.huyendieu.parking.entities.VehicleEntity;
 import com.huyendieu.parking.entities.summary.ParkingAreaSummaryEntity;
 import com.huyendieu.parking.entities.summary.VehicleSummaryEntity;
 import com.huyendieu.parking.exception.ParkingException;
@@ -18,7 +17,7 @@ import com.huyendieu.parking.services.ParkingAreaService;
 import com.huyendieu.parking.services.CheckingService;
 import com.huyendieu.parking.services.base.BaseService;
 import com.huyendieu.parking.services.common.ParkingAreaSummaryService;
-import com.huyendieu.parking.utils.MapperUtils;
+import com.huyendieu.parking.services.common.VehicleSummaryService;
 import com.huyendieu.parking.utils.NotificationUtils;
 import com.huyendieu.parking.utils.UserUtils;
 import org.bson.types.ObjectId;
@@ -52,6 +51,9 @@ public class CheckingServiceImpl extends BaseService implements CheckingService 
 
     @Autowired
     private ParkingAreaSummaryService parkingAreaSummaryService;
+
+    @Autowired
+    private VehicleSummaryService vehicleSummaryService;
 
     @Override
     public CheckParkingResponseModel checkParking(Authentication authentication, String parkingAreaId) throws ParkingException {
@@ -96,8 +98,8 @@ public class CheckingServiceImpl extends BaseService implements CheckingService 
     }
 
     private ParkingHistoryEntity checkIn(String parkingAreaId, String username) throws ParkingException {
-        ParkingAreaSummaryEntity parkingArea = parkingAreaSummaryService.mappingSummary(parkingAreaId);
-        VehicleSummaryEntity vehicle = mappingVehicleSummary(username);
+        ParkingAreaSummaryEntity parkingArea = parkingAreaSummaryService.mappingSummaryById(parkingAreaId);
+        VehicleSummaryEntity vehicle = vehicleSummaryService.mappingSummaryByUsername(username);
         ParkingHistoryEntity parkingHistoryEntity = ParkingHistoryEntity.builder()
                 .checkInDate(currentDate())
                 .vehicle(vehicle)
@@ -146,16 +148,5 @@ public class CheckingServiceImpl extends BaseService implements CheckingService 
         }
 
         return vehicle.getPlateNumber();
-    }
-
-    private VehicleSummaryEntity mappingVehicleSummary(String username) {
-        List<VehicleEntity> vehicleEntities = vehicleRepository.findAllByActiveIsTrue(username);
-        if (CollectionUtils.isEmpty(vehicleEntities)) {
-            return new VehicleSummaryEntity();
-        }
-        VehicleEntity vehicleEntity = vehicleEntities.get(0);
-        VehicleSummaryEntity vehicleSummaryEntity = MapperUtils.map(vehicleEntity, VehicleSummaryEntity.class);
-        vehicleSummaryEntity.setUsernameOwner(username);
-        return vehicleSummaryEntity;
     }
 }

@@ -15,9 +15,6 @@ public class PaymentRequestModel {
     @JsonProperty("ticket_id")
     private String ticketId;
 
-    @JsonProperty("first_name")
-    private String firstName;
-
     @JsonProperty("start_date")
     private String startDate;
 }

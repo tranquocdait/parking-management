@@ -1,0 +1,15 @@
+package com.huyendieu.parking.model.request;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.huyendieu.parking.model.request.base.SearchBaseRequestModel;
+import lombok.Data;
+
+@Data
+public class SearchPaymentRequestModel extends SearchBaseRequestModel {
+
+    @JsonProperty("type")
+    private int type;
+
+    @JsonProperty("is_active")
+    private Boolean isActive;
+}
