@@ -25,7 +25,7 @@ public class TicketController {
     @Autowired
     private TicketService ticketService;
 
-    @GetMapping("")
+    @PostMapping("/list")
     public ResponseEntity<?> list(Authentication authentication, @Valid @RequestBody SearchTicketRequestModel requestModel) {
         try {
             String userName = UserUtils.getUserName(authentication);
@@ -41,9 +41,12 @@ public class TicketController {
     @PostMapping("")
     public ResponseEntity<?> create(Authentication authentication, @Valid @RequestBody TicketRequestModel requestModel) {
         try {
+            if (!UserUtils.isParkingAreaRole(authentication)) {
+                return new ResponseEntity<>(new ErrorResponseModel(), HttpStatus.FORBIDDEN);
+            }
             String userName = UserUtils.getUserName(authentication);
-            ticketService.create(userName, requestModel);
-            return new ResponseEntity<>(new SuccessfulResponseModel(), HttpStatus.OK);
+            String id = ticketService.create(userName, requestModel);
+            return new ResponseEntity<>(new SuccessfulResponseModel(id), HttpStatus.OK);
         } catch (Exception ex) {
             Map<String, String> errors = new HashMap<>();
             errors.put("message", ex.getMessage());
@@ -54,9 +57,27 @@ public class TicketController {
     @PutMapping("")
     public ResponseEntity<?> update(Authentication authentication, @Valid @RequestBody TicketRequestModel requestModel) {
         try {
+            if (!UserUtils.isParkingAreaRole(authentication)) {
+                return new ResponseEntity<>(new ErrorResponseModel(), HttpStatus.FORBIDDEN);
+            }
             String userName = UserUtils.getUserName(authentication);
-            ticketService.update(userName, requestModel);
-            return new ResponseEntity<>(new SuccessfulResponseModel(), HttpStatus.OK);
+            String id = ticketService.update(userName, requestModel);
+            return new ResponseEntity<>(new SuccessfulResponseModel(id), HttpStatus.OK);
+        } catch (Exception ex) {
+            Map<String, String> errors = new HashMap<>();
+            errors.put("message", ex.getMessage());
+            return new ResponseEntity<>(new ErrorResponseModel(errors), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> delete(Authentication authentication, @PathVariable String id) {
+        try {
+            if (!UserUtils.isParkingAreaRole(authentication)) {
+                return new ResponseEntity<>(new ErrorResponseModel(), HttpStatus.FORBIDDEN);
+            }
+            String ticketId = ticketService.delete(id);
+            return new ResponseEntity<>(new SuccessfulResponseModel(ticketId), HttpStatus.OK);
         } catch (Exception ex) {
             Map<String, String> errors = new HashMap<>();
             errors.put("message", ex.getMessage());
