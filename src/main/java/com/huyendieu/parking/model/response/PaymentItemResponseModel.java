@@ -21,14 +21,17 @@ public class PaymentItemResponseModel {
     @JsonProperty("is_active")
     private boolean active;
 
-    @JsonProperty("created_date")
-    private String createdDate;
+    @JsonProperty("start_date")
+    private String startDate;
 
     @JsonProperty("end_date")
     private String endDate;
 
     @JsonProperty("parking_area_user")
     private String parkingAreaUser;
+
+    @JsonProperty("parking_area_address")
+    private String parkingAreaAddress;
 
     @JsonProperty("vehicle_user")
     private String vehicleUser;

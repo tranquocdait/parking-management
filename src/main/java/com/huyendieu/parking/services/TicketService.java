@@ -8,11 +8,14 @@ import com.huyendieu.parking.model.response.common.base.ListComboboxResponseMode
 
 public interface TicketService {
 
-    void create(String userName, TicketRequestModel requestModel) throws ParkingException;
+    String create(String userName, TicketRequestModel requestModel) throws ParkingException;
 
-    void update(String userName, TicketRequestModel requestModel) throws ParkingException;
+    String update(String userName, TicketRequestModel requestModel) throws ParkingException;
+
+    String delete(String id) throws ParkingException;
 
     ListComboboxResponseModel getTypes();
 
     TicketListResponseModel getTickets(String userName, SearchTicketRequestModel requestModel);
+
 }

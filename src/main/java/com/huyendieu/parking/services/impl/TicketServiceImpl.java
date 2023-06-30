@@ -43,13 +43,15 @@ public class TicketServiceImpl extends BaseService implements TicketService {
     private MessageSource messageSource;
 
     @Override
-    public void create(String userName, TicketRequestModel requestModel) throws ParkingException {
+    public String create(String userName, TicketRequestModel requestModel) throws ParkingException {
         TicketEntity ticketEntity = _mappingTicketEntity(userName, requestModel);
         ticketRepository.save(ticketEntity);
+
+        return ticketEntity.getId().toString();
     }
 
     @Override
-    public void update(String userName, TicketRequestModel requestModel) throws ParkingException {
+    public String update(String userName, TicketRequestModel requestModel) throws ParkingException {
 
         // deactivate parent ticket
         Optional<TicketEntity> optionalTicketParentEntity = ticketRepository.findById(requestModel.getId());
@@ -68,6 +70,23 @@ public class TicketServiceImpl extends BaseService implements TicketService {
         TicketEntity ticketEntity = _mappingTicketEntity(userName, requestModel);
         ticketEntity.setParentId(requestModel.getId());
         ticketRepository.save(ticketEntity);
+
+        return ticketEntity.getId().toString();
+    }
+
+    @Override
+    public String delete(String id) throws ParkingException {
+        // deactivate parent ticket
+        Optional<TicketEntity> optionalTicketEntity = ticketRepository.findById(id);
+        if (optionalTicketEntity.isEmpty()) {
+            String messageError = messageSource.getMessage("data-does-not-exist",
+                    new Object[]{id}, LocaleContextHolder.getLocale());
+            throw new ParkingException(messageError);
+        }
+        TicketEntity ticketEntity = optionalTicketEntity.get();
+        ticketRepository.delete(ticketEntity);
+
+        return ticketEntity.getId().toString();
     }
 
     @Override

@@ -2,10 +2,13 @@ package com.huyendieu.parking.services.impl;
 
 import com.huyendieu.parking.constants.Constant;
 import com.huyendieu.parking.entities.PaymentEntity;
+import com.huyendieu.parking.entities.summary.ParkingAreaSummaryEntity;
 import com.huyendieu.parking.entities.summary.TicketSummaryEntity;
+import com.huyendieu.parking.entities.summary.VehicleSummaryEntity;
 import com.huyendieu.parking.exception.ParkingException;
 import com.huyendieu.parking.model.request.PaymentRequestModel;
 import com.huyendieu.parking.model.request.SearchPaymentRequestModel;
+import com.huyendieu.parking.model.request.UpdatePaymentRequestModel;
 import com.huyendieu.parking.model.response.PaymentItemResponseModel;
 import com.huyendieu.parking.model.response.PaymentListResponseModel;
 import com.huyendieu.parking.repositories.PaymentRepository;
@@ -16,6 +19,7 @@ import com.huyendieu.parking.services.common.ParkingAreaSummaryService;
 import com.huyendieu.parking.services.common.TicketSummaryService;
 import com.huyendieu.parking.services.common.VehicleSummaryService;
 import com.huyendieu.parking.utils.DateTimeUtils;
+import com.huyendieu.parking.utils.StringUtils;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
@@ -70,6 +74,41 @@ public class PaymentServiceImpl extends BaseService implements PaymentService {
     }
 
     @Override
+    public String update(UpdatePaymentRequestModel requestModel) throws ParkingException {
+        String id = requestModel.getId();
+        Optional<PaymentEntity> optionalPayment = paymentRepository.findFirstById(new ObjectId(id));
+        if (optionalPayment.isEmpty()) {
+            String messageError = messageSource.getMessage("data-does-not-exist",
+                    new Object[]{id}, LocaleContextHolder.getLocale());
+            throw new ParkingException(messageError);
+        }
+        PaymentEntity paymentEntity = optionalPayment.get();
+        paymentEntity.setStartDate(DateTimeUtils.convertDateFormat(
+                requestModel.getStartDate(),
+                Constant.DateTimeFormat.DD_MM_YYYY,
+                Constant.DateTimeFormat.YYYY_MM_DD));
+        paymentEntity.setEndDate(_prepareEndDate(paymentEntity.getTicket(), requestModel.getStartDate()));
+        paymentRepository.save(paymentEntity);
+
+        return paymentEntity.getId().toString();
+    }
+
+    @Override
+    public String delete(String id) throws ParkingException {
+        Optional<PaymentEntity> optionalPayment = paymentRepository.findFirstById(new ObjectId(id));
+        if (optionalPayment.isEmpty()) {
+            String messageError = messageSource.getMessage("data-does-not-exist",
+                    new Object[]{id}, LocaleContextHolder.getLocale());
+            throw new ParkingException(messageError);
+        }
+        PaymentEntity paymentEntity = optionalPayment.get();
+        String paymentId = paymentEntity.getId().toString();
+        paymentRepository.delete(paymentEntity);
+
+        return paymentId;
+    }
+
+    @Override
     public void complete(String id) throws ParkingException {
         Optional<PaymentEntity> optionalPayment = paymentRepository.findFirstById(new ObjectId(id));
         if (optionalPayment.isEmpty()) {
@@ -100,11 +139,55 @@ public class PaymentServiceImpl extends BaseService implements PaymentService {
     }
 
     private PaymentItemResponseModel _mappingPaymentData(PaymentEntity paymentEntity) {
-        // TODO
-        return null;
+        PaymentItemResponseModel paymentItemResponseModel = new PaymentItemResponseModel();
+        paymentItemResponseModel.setId(paymentEntity.getId().toString());
+
+        TicketSummaryEntity ticket = paymentEntity.getTicket();
+        if (ticket != null) {
+            paymentItemResponseModel.setFare(ticket.getFare());
+            Constant.TicketType ticketType = Constant.TicketType.findByKey(ticket.getType());
+            if (ticketType != null) {
+                paymentItemResponseModel.setName(ticketType.getValue());
+            }
+        }
+
+        paymentItemResponseModel.setActive(paymentEntity.isActive());
+
+        String startDate = paymentEntity.getStartDate();
+        if (!StringUtils.isEmpty(startDate)) {
+            paymentItemResponseModel.setStartDate(DateTimeUtils.convertDateFormat(
+                    startDate,
+                    Constant.DateTimeFormat.YYYY_MM_DD,
+                    Constant.DateTimeFormat.DD_MM_YYYY));
+        }
+
+        String endDate = paymentEntity.getEndDate();
+        if (!StringUtils.isEmpty(endDate)) {
+            paymentItemResponseModel.setEndDate(DateTimeUtils.convertDateFormat(
+                    endDate,
+                    Constant.DateTimeFormat.YYYY_MM_DD,
+                    Constant.DateTimeFormat.DD_MM_YYYY));
+        }
+
+        ParkingAreaSummaryEntity parkingArea = paymentEntity.getParkingArea();
+        if (parkingArea != null) {
+            paymentItemResponseModel.setParkingAreaUser(parkingArea.getUsernameOwner());
+            paymentItemResponseModel.setParkingAreaAddress(parkingArea.getAddress());
+        }
+
+        VehicleSummaryEntity vehicle = paymentEntity.getVehicle();
+        if (vehicle != null) {
+            paymentItemResponseModel.setVehicleUser(vehicle.getUsernameOwner());
+            paymentItemResponseModel.setPlateNumber(vehicle.getPlateNumber());
+        }
+
+        return paymentItemResponseModel;
     }
 
     private String _prepareEndDate(TicketSummaryEntity ticketSummaryEntity, String startDateString) throws ParkingException {
+        if (ticketSummaryEntity == null) {
+            throw new ParkingException("Ticket is not null");
+        }
         String endDate;
         Constant.TicketType ticketType = Constant.TicketType.findByKey(ticketSummaryEntity.getType());
         if (ticketType == null) {

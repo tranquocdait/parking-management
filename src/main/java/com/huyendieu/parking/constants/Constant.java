@@ -1,13 +1,14 @@
 package com.huyendieu.parking.constants;
 
 
+import java.util.Objects;
+
 public class Constant {
 
     public enum Character {
         ;
         public static final String BLANK = "";
         public static final String SPACE = " ";
-
         public static final String VIRGULE = "/";
     }
 
@@ -90,7 +91,7 @@ public class Constant {
 
         public static ParkingRegistrationStatus findByKey(Integer key) {
             for (ParkingRegistrationStatus status : values()) {
-                if (status.key == key) {
+                if (Objects.equals(status.key, key)) {
                     return status;
                 }
             }
@@ -130,7 +131,7 @@ public class Constant {
 
         public static TicketType findByKey(Integer key) {
             for (TicketType ticket : values()) {
-                if (ticket.key == key) {
+                if (Objects.equals(ticket.key, key)) {
                     return ticket;
                 }
             }
