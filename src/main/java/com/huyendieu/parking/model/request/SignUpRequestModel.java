@@ -37,7 +37,6 @@ public class SignUpRequestModel {
 
     // vehicle owner info
     @JsonProperty("plate_number")
-    @NotBlank(message = "plate_number may not be blank")
     private String plateNumber;
 
     @JsonProperty("vehicle_model")
@@ -54,15 +53,12 @@ public class SignUpRequestModel {
     private String address;
 
     @JsonProperty("province")
-    @NotBlank(message = "province may not be blank")
     private String province;
 
     @JsonProperty("district")
-    @NotBlank(message = "district may not be blank")
     private String district;
 
     @JsonProperty("commune")
-    @NotBlank(message = "commune may not be blank")
     private String commune;
 
     @JsonProperty("capacity")
