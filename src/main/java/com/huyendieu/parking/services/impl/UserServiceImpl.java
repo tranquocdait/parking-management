@@ -165,6 +165,7 @@ public class UserServiceImpl extends BaseService implements UserService {
                     .province(requestModel.getProvince())
                     .district(requestModel.getDistrict())
                     .commune(requestModel.getCommune())
+                    .capacity(requestModel.getCapacity())
                     .owner(userEntity)
                     .createdDate(currentDate())
                     .createdBy(getClass().getSimpleName())

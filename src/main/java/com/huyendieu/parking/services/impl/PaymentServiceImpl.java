@@ -83,7 +83,7 @@ public class PaymentServiceImpl extends BaseService implements PaymentService {
 
     private boolean isAvailableCapacity(String parkingAreaId) {
         Optional<ParkingAreaEntity> optionalParkingAreaEntity = parkingAreaRepository.findFistById(new ObjectId(parkingAreaId));
-        if (!optionalParkingAreaEntity.isPresent()) {
+        if (optionalParkingAreaEntity.isEmpty()) {
             return false;
         }
         ParkingAreaEntity parkingAreaEntity = optionalParkingAreaEntity.get();
