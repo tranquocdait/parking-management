@@ -1,170 +1,221 @@
 package com.huyendieu.parking.services.impl;
 
 import com.huyendieu.parking.constants.Constant;
-import com.huyendieu.parking.constants.NotificationConstant;
-import com.huyendieu.parking.entities.ParkingAreaEntity;
-import com.huyendieu.parking.entities.ParkingHistoryEntity;
-import com.huyendieu.parking.entities.VehicleEntity;
+import com.huyendieu.parking.entities.PaymentEntity;
 import com.huyendieu.parking.entities.summary.ParkingAreaSummaryEntity;
+import com.huyendieu.parking.entities.summary.TicketSummaryEntity;
 import com.huyendieu.parking.entities.summary.VehicleSummaryEntity;
 import com.huyendieu.parking.exception.ParkingException;
-import com.huyendieu.parking.model.notification.NotificationModel;
-import com.huyendieu.parking.model.response.CapacityResponseModel;
-import com.huyendieu.parking.model.response.CheckParkingResponseModel;
-import com.huyendieu.parking.repositories.ParkingAreaRepository;
-import com.huyendieu.parking.repositories.ParkingHistoryRepository;
-import com.huyendieu.parking.repositories.VehicleRepository;
-import com.huyendieu.parking.services.ParkingAreaService;
+import com.huyendieu.parking.model.request.PaymentRequestModel;
+import com.huyendieu.parking.model.request.SearchPaymentRequestModel;
+import com.huyendieu.parking.model.request.UpdatePaymentRequestModel;
+import com.huyendieu.parking.model.response.PaymentItemResponseModel;
+import com.huyendieu.parking.model.response.PaymentListResponseModel;
+import com.huyendieu.parking.repositories.PaymentRepository;
+import com.huyendieu.parking.repositories.complex.PaymentComplexRepository;
 import com.huyendieu.parking.services.PaymentService;
 import com.huyendieu.parking.services.base.BaseService;
-import com.huyendieu.parking.utils.MapperUtils;
-import com.huyendieu.parking.utils.NotificationUtils;
-import com.huyendieu.parking.utils.UserUtils;
+import com.huyendieu.parking.services.common.ParkingAreaSummaryService;
+import com.huyendieu.parking.services.common.TicketSummaryService;
+import com.huyendieu.parking.services.common.VehicleSummaryService;
+import com.huyendieu.parking.utils.DateTimeUtils;
+import com.huyendieu.parking.utils.StringUtils;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+
 
 @Service
 public class PaymentServiceImpl extends BaseService implements PaymentService {
 
     @Autowired
-    private ParkingAreaRepository parkingAreaRepository;
-
-    @Autowired
-    private VehicleRepository vehicleRepository;
-
-    @Autowired
-    private ParkingHistoryRepository parkingHistoryRepository;
-
-    @Autowired
     private MessageSource messageSource;
 
     @Autowired
-    private ParkingAreaService parkingAreaService;
+    private PaymentRepository paymentRepository;
+
+    @Autowired
+    private VehicleSummaryService vehicleSummaryService;
+
+    @Autowired
+    private TicketSummaryService ticketSummaryService;
+
+    @Autowired
+    private ParkingAreaSummaryService parkingAreaSummaryService;
+
+    @Autowired
+    private PaymentComplexRepository paymentComplexRepository;
 
     @Override
-    public CheckParkingResponseModel checkParking(Authentication authentication, String parkingAreaId) throws ParkingException {
-        if (!UserUtils.isVehicleRole(authentication)) {
-            throw new ParkingException("authentication don't exist!");
-        }
-        String username = UserUtils.getUserName(authentication);
-        List<ParkingHistoryEntity> parkingHistoryEntities =
-                parkingHistoryRepository.findUserByNotCheckOut(username, new ObjectId(parkingAreaId));
-        if (!CollectionUtils.isEmpty(parkingHistoryEntities)) {
-            ParkingHistoryEntity parkingHistoryEntity = checkOut(parkingHistoryEntities.get(0));
-            checkingNotification(parkingAreaId, getPlateNumber(parkingHistoryEntity), Constant.CheckParkingCode.CHECK_OUT.getCode());
-            return CheckParkingResponseModel.builder()
-                    .parkingId(parkingAreaId)
-                    .checkType(Constant.CheckParkingCode.CHECK_OUT.getCode())
-                    .message(Constant.CheckParkingCode.CHECK_OUT.getValue())
-                    .build();
-        } else {
-            if (!isAvailableCapacity(parkingAreaId)) {
-                String messageError = messageSource.getMessage("parking-area-no-longer-available",
-                        new Object[]{}, LocaleContextHolder.getLocale());
-                throw new ParkingException(messageError);
-            }
-            ParkingHistoryEntity parkingHistoryEntity = checkIn(parkingAreaId, username);
-            checkingNotification(parkingAreaId, getPlateNumber(parkingHistoryEntity), Constant.CheckParkingCode.CHECK_IN.getCode());
-            return CheckParkingResponseModel.builder()
-                    .parkingId(parkingAreaId)
-                    .checkType(Constant.CheckParkingCode.CHECK_IN.getCode())
-                    .message(Constant.CheckParkingCode.CHECK_IN.getValue())
-                    .build();
-        }
-    }
-
-    private boolean isAvailableCapacity(String parkingAreaId) {
-        Optional<ParkingAreaEntity> optionalParkingAreaEntity = parkingAreaRepository.findFistById(new ObjectId(parkingAreaId));
-        if (optionalParkingAreaEntity.isEmpty()) {
-            return false;
-        }
-        ParkingAreaEntity parkingAreaEntity = optionalParkingAreaEntity.get();
-        CapacityResponseModel capacityInformation = parkingAreaService.getCapacityByParkingArea(parkingAreaEntity);
-        return capacityInformation.getOccupation() <= capacityInformation.getCapacity();
-    }
-
-    private ParkingHistoryEntity checkIn(String parkingAreaId, String username) throws ParkingException {
-        ParkingAreaSummaryEntity parkingArea = mappingParkingAreaSummary(parkingAreaId);
-        VehicleSummaryEntity vehicle = mappingVehicleSummary(username);
-        ParkingHistoryEntity parkingHistoryEntity = ParkingHistoryEntity.builder()
-                .checkInDate(currentDate())
-                .vehicle(vehicle)
-                .parkingArea(parkingArea)
-                .createdDate(currentDate())
-                .createdBy(getClass().getSimpleName())
+    public String create(PaymentRequestModel requestModel) throws ParkingException {
+        TicketSummaryEntity ticketSummaryEntity = ticketSummaryService.mappingSummaryById(requestModel.getTicketId());
+        PaymentEntity paymentEntity = PaymentEntity.builder()
+                .vehicle(vehicleSummaryService.mappingSummaryById(requestModel.getVehicleId()))
+                .ticket(ticketSummaryEntity)
+                .parkingArea(parkingAreaSummaryService.mappingSummaryById(requestModel.getParkingAreaId()))
+                .startDate(DateTimeUtils.convertDateFormat(
+                        requestModel.getStartDate(),
+                        Constant.DateTimeFormat.DD_MM_YYYY,
+                        Constant.DateTimeFormat.YYYY_MM_DD))
+                .endDate(_prepareEndDate(ticketSummaryEntity, requestModel.getStartDate()))
+                .active(false)
                 .build();
-        parkingHistoryRepository.save(parkingHistoryEntity);
+        paymentRepository.save(paymentEntity);
 
-        return parkingHistoryEntity;
+        return paymentEntity.getId().toString();
     }
 
-    private ParkingHistoryEntity checkOut(ParkingHistoryEntity parkingHistoryEntity) throws ParkingException {
-        parkingHistoryEntity.setCheckOutDate(currentDate());
-        parkingHistoryEntity.setUpdatedDate(currentDate());
-        parkingHistoryEntity.setUpdatedBy(getClass().getSimpleName());
-        parkingHistoryRepository.save(parkingHistoryEntity);
+    @Override
+    public String update(UpdatePaymentRequestModel requestModel) throws ParkingException {
+        String id = requestModel.getId();
+        Optional<PaymentEntity> optionalPayment = paymentRepository.findFirstById(new ObjectId(id));
+        if (optionalPayment.isEmpty()) {
+            String messageError = messageSource.getMessage("data-does-not-exist",
+                    new Object[]{id}, LocaleContextHolder.getLocale());
+            throw new ParkingException(messageError);
+        }
+        PaymentEntity paymentEntity = optionalPayment.get();
+        paymentEntity.setStartDate(DateTimeUtils.convertDateFormat(
+                requestModel.getStartDate(),
+                Constant.DateTimeFormat.DD_MM_YYYY,
+                Constant.DateTimeFormat.YYYY_MM_DD));
+        paymentEntity.setEndDate(_prepareEndDate(paymentEntity.getTicket(), requestModel.getStartDate()));
+        paymentRepository.save(paymentEntity);
 
-        return parkingHistoryEntity;
+        return paymentEntity.getId().toString();
     }
 
-    private void checkingNotification(String parkingAreaId, String plateNumber, String type) throws ParkingException {
-        NotificationModel notificationModel = null;
-        if (type == Constant.CheckParkingCode.CHECK_IN.getCode()) {
-            String message = messageSource.getMessage("check-in-notification",
-                    new Object[]{plateNumber}, LocaleContextHolder.getLocale());
-            notificationModel = new NotificationModel(NotificationConstant.NotificationType.CHECK_IN.getCode(), message);
+    @Override
+    public String delete(String id) throws ParkingException {
+        Optional<PaymentEntity> optionalPayment = paymentRepository.findFirstById(new ObjectId(id));
+        if (optionalPayment.isEmpty()) {
+            String messageError = messageSource.getMessage("data-does-not-exist",
+                    new Object[]{id}, LocaleContextHolder.getLocale());
+            throw new ParkingException(messageError);
         }
-        if (type == Constant.CheckParkingCode.CHECK_OUT.getCode()) {
-            String message = messageSource.getMessage("check-out-notification",
-                    new Object[]{plateNumber}, LocaleContextHolder.getLocale());
-            notificationModel = new NotificationModel(NotificationConstant.NotificationType.CHECK_OUT.getCode(), message);
-        }
-        NotificationUtils.sendNotification(String.format(NotificationConstant.NotificationPath.CHECKING,
-                parkingAreaId), notificationModel);
+        PaymentEntity paymentEntity = optionalPayment.get();
+        String paymentId = paymentEntity.getId().toString();
+        paymentRepository.delete(paymentEntity);
+
+        return paymentId;
     }
 
-    private String getPlateNumber(ParkingHistoryEntity parkingHistoryEntity) {
-        if (parkingHistoryEntity == null) {
-            return Constant.Character.BLANK;
+    @Override
+    public void complete(String id) throws ParkingException {
+        Optional<PaymentEntity> optionalPayment = paymentRepository.findFirstById(new ObjectId(id));
+        if (optionalPayment.isEmpty()) {
+            String messageError = messageSource.getMessage("data-does-not-exist",
+                    new Object[]{id}, LocaleContextHolder.getLocale());
+            throw new ParkingException(messageError);
         }
-
-        VehicleSummaryEntity vehicle = parkingHistoryEntity.getVehicle();
-        if (vehicle == null) {
-            return Constant.Character.BLANK;
-        }
-
-        return vehicle.getPlateNumber();
+        PaymentEntity paymentEntity = optionalPayment.get();
+        paymentEntity.setActive(true);
+        paymentRepository.save(paymentEntity);
     }
 
+    @Override
+    public PaymentListResponseModel getPayments(SearchPaymentRequestModel requestModel, String userName, boolean isParkingArea) {
+        List<PaymentItemResponseModel> ticketItemResponseModels = new ArrayList<>();
+        List<PaymentEntity> paymentEntities = paymentComplexRepository.findAllByPaging(requestModel, userName, isParkingArea);
+        long totalRecord = paymentComplexRepository.countAll(requestModel, userName, isParkingArea);
 
-    private ParkingAreaSummaryEntity mappingParkingAreaSummary(String parkingAreaId) {
-        Optional<ParkingAreaEntity> optionalParkingAreaEntity = parkingAreaRepository.findFistById(new ObjectId(parkingAreaId));
-        if (!optionalParkingAreaEntity.isPresent()) {
-            return new ParkingAreaSummaryEntity();
+        if (!CollectionUtils.isEmpty(paymentEntities)) {
+            for (PaymentEntity paymentEntity : paymentEntities) {
+                ticketItemResponseModels.add(_mappingPaymentData(paymentEntity));
+            }
         }
-        ParkingAreaEntity parkingAreaEntity = optionalParkingAreaEntity.get();
-        ParkingAreaSummaryEntity parkingAreaSummaryEntity = MapperUtils.map(parkingAreaEntity, ParkingAreaSummaryEntity.class);
-        parkingAreaSummaryEntity.setUsernameOwner(parkingAreaEntity.getOwner() != null ?
-                parkingAreaEntity.getOwner().getUserName() : Constant.Character.BLANK);
-        return parkingAreaSummaryEntity;
+        return PaymentListResponseModel.builder()
+                .dataList(ticketItemResponseModels)
+                .totalRecord(totalRecord)
+                .build();
     }
 
-    private VehicleSummaryEntity mappingVehicleSummary(String username) {
-        List<VehicleEntity> vehicleEntities = vehicleRepository.findAllByActiveIsTrue(username);
-        if (CollectionUtils.isEmpty(vehicleEntities)) {
-            return new VehicleSummaryEntity();
+    private PaymentItemResponseModel _mappingPaymentData(PaymentEntity paymentEntity) {
+        PaymentItemResponseModel paymentItemResponseModel = new PaymentItemResponseModel();
+        paymentItemResponseModel.setId(paymentEntity.getId().toString());
+
+        TicketSummaryEntity ticket = paymentEntity.getTicket();
+        if (ticket != null) {
+            paymentItemResponseModel.setFare(ticket.getFare());
+            Constant.TicketType ticketType = Constant.TicketType.findByKey(ticket.getType());
+            if (ticketType != null) {
+                paymentItemResponseModel.setName(ticketType.getValue());
+            }
         }
-        VehicleEntity vehicleEntity = vehicleEntities.get(0);
-        VehicleSummaryEntity vehicleSummaryEntity = MapperUtils.map(vehicleEntity, VehicleSummaryEntity.class);
-        vehicleSummaryEntity.setUsernameOwner(username);
-        return vehicleSummaryEntity;
+
+        paymentItemResponseModel.setActive(paymentEntity.isActive());
+
+        String startDate = paymentEntity.getStartDate();
+        if (!StringUtils.isEmpty(startDate)) {
+            paymentItemResponseModel.setStartDate(DateTimeUtils.convertDateFormat(
+                    startDate,
+                    Constant.DateTimeFormat.YYYY_MM_DD,
+                    Constant.DateTimeFormat.DD_MM_YYYY));
+        }
+
+        String endDate = paymentEntity.getEndDate();
+        if (!StringUtils.isEmpty(endDate)) {
+            paymentItemResponseModel.setEndDate(DateTimeUtils.convertDateFormat(
+                    endDate,
+                    Constant.DateTimeFormat.YYYY_MM_DD,
+                    Constant.DateTimeFormat.DD_MM_YYYY));
+        }
+
+        ParkingAreaSummaryEntity parkingArea = paymentEntity.getParkingArea();
+        if (parkingArea != null) {
+            paymentItemResponseModel.setParkingAreaUser(parkingArea.getUsernameOwner());
+            paymentItemResponseModel.setParkingAreaAddress(parkingArea.getAddress());
+        }
+
+        VehicleSummaryEntity vehicle = paymentEntity.getVehicle();
+        if (vehicle != null) {
+            paymentItemResponseModel.setVehicleUser(vehicle.getUsernameOwner());
+            paymentItemResponseModel.setPlateNumber(vehicle.getPlateNumber());
+        }
+
+        return paymentItemResponseModel;
+    }
+
+    private String _prepareEndDate(TicketSummaryEntity ticketSummaryEntity, String startDateString) throws ParkingException {
+        if (ticketSummaryEntity == null) {
+            throw new ParkingException("Ticket is not null");
+        }
+        String endDate;
+        Constant.TicketType ticketType = Constant.TicketType.findByKey(ticketSummaryEntity.getType());
+        if (ticketType == null) {
+            throw new ParkingException("Ticket type is not null");
+        }
+        LocalDate startDate;
+        LocalDate localEndDate;
+        switch (ticketType) {
+            case MONTHLY:
+                startDate = DateTimeUtils.convertStringToDate(startDateString, Constant.DateTimeFormat.DD_MM_YYYY);
+                localEndDate = startDate.plusMonths(1);
+                endDate = DateTimeUtils.convertDateFormat(localEndDate, Constant.DateTimeFormat.YYYY_MM_DD);
+                break;
+            case YEARLY:
+                startDate = DateTimeUtils.convertStringToDate(startDateString, Constant.DateTimeFormat.DD_MM_YYYY);
+                localEndDate = startDate.plusYears(1);
+                endDate = DateTimeUtils.convertDateFormat(localEndDate, Constant.DateTimeFormat.YYYY_MM_DD);
+                break;
+            case ONE_TIME:
+                endDate = DateTimeUtils.convertDateFormat(
+                        startDateString,
+                        Constant.DateTimeFormat.DD_MM_YYYY,
+                        Constant.DateTimeFormat.YYYY_MM_DD);
+                break;
+            case FREE:
+            default:
+                endDate = "";
+        }
+        return endDate;
     }
 }
