@@ -1,4 +1,4 @@
-FROM gradle:7.5.1-jdk11-alpine as build-jar
+FROM gradle:latest as build-jar
 
 WORKDIR /tmp
 

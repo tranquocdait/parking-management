@@ -1,8 +1,10 @@
 package com.huyendieu.parking.controllers;
 
+import com.huyendieu.parking.constants.Constant;
 import com.huyendieu.parking.model.request.PaymentRequestModel;
 import com.huyendieu.parking.model.request.SearchPaymentRequestModel;
 import com.huyendieu.parking.model.request.UpdatePaymentRequestModel;
+import com.huyendieu.parking.model.response.CheckParkingResponseModel;
 import com.huyendieu.parking.model.response.PaymentListResponseModel;
 import com.huyendieu.parking.model.response.base.ErrorResponseModel;
 import com.huyendieu.parking.model.response.base.SuccessfulResponseModel;
@@ -28,6 +30,8 @@ public class PaymentController {
     @PostMapping
     public ResponseEntity<?> create(@Valid @RequestBody PaymentRequestModel requestModel) {
         try {
+            requestModel.setStatus(Constant.PaymentStatus.DONE.getKey());
+            requestModel.setActive(true);
             String id = paymentService.create(requestModel);
             return new ResponseEntity<>(new SuccessfulResponseModel(id), HttpStatus.OK);
         } catch (Exception ex) {
@@ -78,10 +82,10 @@ public class PaymentController {
         }
     }
 
-    @GetMapping("/complete/{id}")
-    public ResponseEntity<?> complete(@PathVariable String id) {
+    @GetMapping("/complete/{payment_id}")
+    public ResponseEntity<?> complete(@PathVariable("payment_id") String paymentId) {
         try {
-            paymentService.complete(id);
+            paymentService.complete(paymentId);
             return new ResponseEntity<>(new SuccessfulResponseModel(), HttpStatus.OK);
         } catch (Exception ex) {
             Map<String, String> errors = new HashMap<>();

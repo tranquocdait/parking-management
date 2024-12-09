@@ -32,6 +32,12 @@ public class PaymentEntity extends BaseEntity {
     @Field(name = "is_active")
     private boolean active;
 
+    @Field(name = "status")
+    private int status;
+
+    @Field(name = "prices")
+    private float prices;
+
     @Field(name = "start_date")
     private String startDate;
 

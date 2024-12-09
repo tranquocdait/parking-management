@@ -1,8 +1,11 @@
 package com.huyendieu.parking.repositories.complex.impl;
 
+import com.huyendieu.parking.constants.Constant;
 import com.huyendieu.parking.entities.PaymentEntity;
 import com.huyendieu.parking.model.request.SearchPaymentRequestModel;
 import com.huyendieu.parking.repositories.complex.PaymentComplexRepository;
+import com.huyendieu.parking.services.base.BaseService;
+import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -15,7 +18,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public class PaymentComplexRepositoryImpl implements PaymentComplexRepository {
+public class PaymentComplexRepositoryImpl extends BaseService implements PaymentComplexRepository {
 
     @Autowired
     private MongoTemplate mongoTemplate;
@@ -27,6 +30,17 @@ public class PaymentComplexRepositoryImpl implements PaymentComplexRepository {
                 Sort.by(Sort.Direction.DESC, "created_date", "is_active"));
         query.with(pageable);
         return mongoTemplate.find(query, PaymentEntity.class);
+    }
+
+    @Override
+    public List<PaymentEntity> findAvalabelByUser(String username, String parkingAreaId, ObjectId ticketId) {
+        Criteria criteria = Criteria.where("parking_area.id").is(new ObjectId(parkingAreaId))
+                .and("vehicle.username_owner").is(username)
+                .and("ticket.id").is(new ObjectId())
+                .and("is_active").is(true)
+                .and("status").is(Constant.PaymentStatus.DONE.getKey())
+                .and("created_date").gte(currentDate());
+        return mongoTemplate.find(Query.query(criteria), PaymentEntity.class);
     }
 
     @Override

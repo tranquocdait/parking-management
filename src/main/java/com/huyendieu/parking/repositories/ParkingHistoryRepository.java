@@ -12,4 +12,7 @@ public interface ParkingHistoryRepository extends MongoRepository<ParkingHistory
 
     @Query("{ 'vehicle.username_owner' : ?0, 'parking_area._id' : ?1, 'check_out_date': { '$in': [ null, '' ] } }")
     List<ParkingHistoryEntity> findUserByNotCheckOut(String username, ObjectId parkingAreaId);
+
+    List<ParkingHistoryEntity> findByPayment_Id(ObjectId paymentId);
+
 }
