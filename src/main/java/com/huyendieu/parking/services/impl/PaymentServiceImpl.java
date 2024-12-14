@@ -63,6 +63,7 @@ public class PaymentServiceImpl extends BaseService implements PaymentService {
 
     @Autowired
     private TicketRepository ticketRepository;
+
     @Autowired
     private ParkingHistoryRepository parkingHistoryRepository;
 

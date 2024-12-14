@@ -4,6 +4,7 @@ import com.huyendieu.parking.constants.Constant;
 import com.huyendieu.parking.constants.NotificationConstant;
 import com.huyendieu.parking.entities.ParkingAreaEntity;
 import com.huyendieu.parking.entities.ParkingHistoryEntity;
+import com.huyendieu.parking.entities.PaymentEntity;
 import com.huyendieu.parking.entities.VehicleEntity;
 import com.huyendieu.parking.entities.summary.VehicleSummaryEntity;
 import com.huyendieu.parking.exception.ParkingException;
@@ -11,8 +12,10 @@ import com.huyendieu.parking.model.dto.DashboardModel;
 import com.huyendieu.parking.model.request.*;
 import com.huyendieu.parking.model.response.*;
 import com.huyendieu.parking.repositories.ParkingAreaRepository;
+import com.huyendieu.parking.repositories.PaymentRepository;
 import com.huyendieu.parking.repositories.VehicleRepository;
 import com.huyendieu.parking.repositories.complex.ParkingHistoryComplexRepository;
+import com.huyendieu.parking.repositories.complex.PaymentComplexRepository;
 import com.huyendieu.parking.repositories.complex.VehicleComplexRepository;
 import com.huyendieu.parking.services.ParkingAreaService;
 import com.huyendieu.parking.services.base.BaseService;
@@ -41,6 +44,9 @@ public class ParkingAreaServiceImpl extends BaseService implements ParkingAreaSe
 
     @Autowired
     private VehicleComplexRepository vehicleComplexRepository;
+
+    @Autowired
+    private PaymentComplexRepository paymentComplexRepository;
 
     @Override
     public QRCodeResponseModel generateQR(String username, boolean isViewAll) throws ParkingException {
@@ -102,7 +108,6 @@ public class ParkingAreaServiceImpl extends BaseService implements ParkingAreaSe
         return responseModel;
     }
 
-
     @Override
     public DashboardResponseModel checkingStatistics(Authentication authentication, DashboardRequestModel requestModel) throws ParkingException {
         String username = UserUtils.getUserName(authentication);
@@ -130,6 +135,40 @@ public class ParkingAreaServiceImpl extends BaseService implements ParkingAreaSe
             mapData.put(day, mapData.get(day) + 1);
         }
         responseModel.setTotal(parkingHistoryEntities.size());
+        responseModel.setData(new ArrayList<>(mapData.values()));
+        return responseModel;
+    }
+
+    @Override
+    public DashboardResponseModel incomeStatistics(Authentication authentication, DashboardRequestModel requestModel) throws ParkingException {
+        String username = UserUtils.getUserName(authentication);
+        int dashboardType = requestModel.getType();
+
+        DashboardResponseModel responseModel = new DashboardResponseModel();
+
+        // label
+        List<String> labels = mappingLabel(dashboardType);
+        responseModel.setLabel(labels);
+
+        // data
+        DashboardModel dashboardModel = getDashboardModel(dashboardType);
+        List<PaymentEntity> paymentEntities = paymentComplexRepository.findAll(username, dashboardModel);
+        if (CollectionUtils.isEmpty(paymentEntities)) {
+            return responseModel;
+        }
+        Map<String, Float> mapData = initDashboardData(labels);
+        float total = 0;
+        for (PaymentEntity paymentEntity : paymentEntities) {
+            String day = DateTimeUtils.convertDateTimeFormat(
+                    paymentEntity.getStartDate(),
+                    Constant.DateTimeFormat.YYYY_MM_DD_HH_MM_SS,
+                    Constant.DateTimeFormat.DD_MM
+            );
+            float prices = paymentEntity.getPrices();
+            mapData.put(day, mapData.get(day) + prices);
+            total += prices;
+        }
+        responseModel.setTotal(total);
         responseModel.setData(new ArrayList<>(mapData.values()));
         return responseModel;
     }
@@ -230,6 +269,7 @@ public class ParkingAreaServiceImpl extends BaseService implements ParkingAreaSe
         long occupation = parkingHistoryComplexRepository.countAll(username, trackingParkingRequestModel);
 
         return CapacityResponseModel.builder()
+                .id(parkingAreaEntity.getId().toString())
                 .capacity(parkingAreaEntity.getCapacity())
                 .occupation((int) occupation)
                 .build();

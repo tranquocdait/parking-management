@@ -2,9 +2,11 @@ package com.huyendieu.parking.repositories.complex.impl;
 
 import com.huyendieu.parking.constants.Constant;
 import com.huyendieu.parking.entities.PaymentEntity;
+import com.huyendieu.parking.model.dto.DashboardModel;
 import com.huyendieu.parking.model.request.SearchPaymentRequestModel;
 import com.huyendieu.parking.repositories.complex.PaymentComplexRepository;
 import com.huyendieu.parking.services.base.BaseService;
+import com.huyendieu.parking.utils.StringUtils;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
@@ -22,6 +24,19 @@ public class PaymentComplexRepositoryImpl extends BaseService implements Payment
 
     @Autowired
     private MongoTemplate mongoTemplate;
+
+    @Override
+    public List<PaymentEntity> findAll(String userNameOwner, DashboardModel requestModel) {
+        Criteria criteria = Criteria.where("parking_area.username_owner").is(userNameOwner);
+        if (!StringUtils.isEmpty(requestModel.getDateFrom()) && !StringUtils.isEmpty(requestModel.getDateTo())) {
+            criteria.and("start_date").gte(requestModel.getDateFrom()).lte(requestModel.getDateTo());
+        } else if (!StringUtils.isEmpty(requestModel.getDateTo())) {
+            criteria.and("start_date").lte(requestModel.getDateTo());
+        } else if (!StringUtils.isEmpty(requestModel.getDateFrom())) {
+            criteria.and("start_date").gte(requestModel.getDateFrom());
+        }
+        return mongoTemplate.find(Query.query(criteria), PaymentEntity.class);
+    }
 
     @Override
     public List<PaymentEntity> findAllByPaging(SearchPaymentRequestModel requestModel, String userName, boolean isParkingArea) {

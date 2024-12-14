@@ -94,6 +94,20 @@ public class ParkingManagementController {
         }
     }
 
+    @PostMapping("/income-statistics")
+    public ResponseEntity<?> incomeStatistics(Authentication authentication,
+            @RequestBody DashboardRequestModel requestModel) {
+        try {
+            DashboardResponseModel responseModel =
+                    parkingAreaService.incomeStatistics(authentication, requestModel);
+            return new ResponseEntity(new SuccessfulResponseModel(responseModel), HttpStatus.OK);
+        } catch (Exception ex) {
+            Map<String, String> errors = new HashMap<>();
+            errors.put("message", ex.getMessage());
+            return new ResponseEntity(new ErrorResponseModel(errors), HttpStatus.BAD_REQUEST);
+        }
+    }
+
     @PostMapping("/vehicles")
     public ResponseEntity<?> getVehicles(Authentication authentication, @RequestBody VehicleRequestModel requestModel) {
         try {
