@@ -1,6 +1,8 @@
 package com.huyendieu.parking.controllers;
 
 import com.huyendieu.parking.constants.Constant;
+import com.huyendieu.parking.entities.ParkingAreaEntity;
+import com.huyendieu.parking.entities.VehicleEntity;
 import com.huyendieu.parking.model.request.PaymentRequestModel;
 import com.huyendieu.parking.model.request.SearchPaymentRequestModel;
 import com.huyendieu.parking.model.request.UpdatePaymentRequestModel;
@@ -8,7 +10,11 @@ import com.huyendieu.parking.model.response.CheckParkingResponseModel;
 import com.huyendieu.parking.model.response.PaymentListResponseModel;
 import com.huyendieu.parking.model.response.base.ErrorResponseModel;
 import com.huyendieu.parking.model.response.base.SuccessfulResponseModel;
+import com.huyendieu.parking.repositories.ParkingAreaRepository;
+import com.huyendieu.parking.repositories.VehicleRepository;
 import com.huyendieu.parking.services.PaymentService;
+import com.huyendieu.parking.utils.DateTimeUtils;
+import com.huyendieu.parking.utils.StringUtils;
 import com.huyendieu.parking.utils.UserUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -17,6 +23,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -27,9 +34,39 @@ public class PaymentController {
     @Autowired
     private PaymentService paymentService;
 
+    @Autowired
+    private ParkingAreaRepository parkingAreaRepository;
+
+    @Autowired
+    private VehicleRepository vehicleRepository;
+
     @PostMapping
-    public ResponseEntity<?> create(@Valid @RequestBody PaymentRequestModel requestModel) {
+    public ResponseEntity<?> create(Authentication authentication,
+            @Valid @RequestBody PaymentRequestModel requestModel) {
         try {
+            String username = UserUtils.getUserName(authentication);
+            if (UserUtils.isParkingAreaRole(authentication)) {
+                ParkingAreaEntity parkingAreaEntity = parkingAreaRepository.findFirstByOwner(username);
+                requestModel.setParkingAreaId(parkingAreaEntity.getId().toString());
+            } else {
+                VehicleEntity vehicleEntity = vehicleRepository.findByIdAndUsername(username);
+                requestModel.setVehicleId(vehicleEntity.getId().toString());
+            }
+            String startDate = requestModel.getStartDate();
+            if (!StringUtils.isEmpty(startDate)) {
+                LocalDate localEndDate = DateTimeUtils.convertStringToDate(startDate,
+                                                                           Constant.DateTimeFormat.YYYY_MM_DD);
+
+                // start date
+                startDate += Constant.Character.SPACE + Constant.DateTimeFormat.FIRST_TIME_OF_DATE;
+                requestModel.setStartDate(startDate);
+
+                // end date
+                localEndDate = localEndDate.plusMonths(1);
+                String endDate = DateTimeUtils.convertDateFormat(localEndDate, Constant.DateTimeFormat.YYYY_MM_DD);
+                endDate += Constant.Character.SPACE + Constant.DateTimeFormat.LAST_TIME_OF_DATE;
+                requestModel.setEndDate(endDate);
+            }
             requestModel.setStatus(Constant.PaymentStatus.DONE.getKey());
             requestModel.setActive(true);
             String id = paymentService.create(requestModel);

@@ -10,7 +10,7 @@ public interface PaymentComplexRepository {
 
     List<PaymentEntity> findAllByPaging(SearchPaymentRequestModel requestModel, String userName, boolean isParkingArea);
 
-    List<PaymentEntity> findAvalabelByUser(String username, String parkingAreaId, ObjectId ticketId);
+    List<PaymentEntity> findValidPaymentByUser(String username, String parkingAreaId, ObjectId ticketId);
 
     long countAll(SearchPaymentRequestModel requestModel, String userName, boolean isParkingArea);
 }

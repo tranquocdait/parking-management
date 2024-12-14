@@ -44,6 +44,7 @@ public class ParkingAreaServiceImpl extends BaseService implements ParkingAreaSe
 
     @Override
     public QRCodeResponseModel generateQR(String username, boolean isViewAll) throws ParkingException {
+
         ParkingAreaEntity parkingAreaEntity = parkingAreaRepository.findFirstByOwner(username);
         if (parkingAreaEntity == null) {
             throw new ParkingException("authentication don't exist!");

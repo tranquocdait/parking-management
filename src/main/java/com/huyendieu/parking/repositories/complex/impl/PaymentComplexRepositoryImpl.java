@@ -27,20 +27,21 @@ public class PaymentComplexRepositoryImpl extends BaseService implements Payment
     public List<PaymentEntity> findAllByPaging(SearchPaymentRequestModel requestModel, String userName, boolean isParkingArea) {
         Query query = makeQuery(requestModel, userName, isParkingArea);
         Pageable pageable = PageRequest.of(requestModel.getPage(), requestModel.getPageSize(),
-                Sort.by(Sort.Direction.DESC, "created_date", "is_active"));
+                Sort.by(Sort.Direction.DESC, "start_date", "is_active"));
         query.with(pageable);
         return mongoTemplate.find(query, PaymentEntity.class);
     }
 
     @Override
-    public List<PaymentEntity> findAvalabelByUser(String username, String parkingAreaId, ObjectId ticketId) {
-        Criteria criteria = Criteria.where("parking_area.id").is(new ObjectId(parkingAreaId))
+    public List<PaymentEntity> findValidPaymentByUser(String username, String parkingAreaId, ObjectId ticketId) {
+        Criteria criteria = Criteria.where("parking_area._id").is(new ObjectId(parkingAreaId))
                 .and("vehicle.username_owner").is(username)
-                .and("ticket.id").is(new ObjectId())
+                .and("ticket._id").is(ticketId)
                 .and("is_active").is(true)
                 .and("status").is(Constant.PaymentStatus.DONE.getKey())
-                .and("created_date").gte(currentDate());
-        return mongoTemplate.find(Query.query(criteria), PaymentEntity.class);
+                .and("end_date").gte(currentDate());
+        Query query = Query.query(criteria).with(Sort.by(Sort.Direction.DESC, "end_date"));
+        return mongoTemplate.find(query, PaymentEntity.class);
     }
 
     @Override

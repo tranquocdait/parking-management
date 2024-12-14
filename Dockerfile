@@ -1,4 +1,4 @@
-FROM gradle:latest as build-jar
+FROM gradle:latest AS build-jar
 
 WORKDIR /tmp
 

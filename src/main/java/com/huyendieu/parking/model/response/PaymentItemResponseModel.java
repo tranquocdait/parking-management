@@ -27,6 +27,9 @@ public class PaymentItemResponseModel {
     @JsonProperty("end_date")
     private String endDate;
 
+    @JsonProperty("prices")
+    private float prices;
+
     @JsonProperty("parking_area_user")
     private String parkingAreaUser;
 

@@ -69,6 +69,10 @@ public class PaymentServiceImpl extends BaseService implements PaymentService {
     @Override
     public String create(PaymentRequestModel requestModel) throws ParkingException {
         TicketSummaryEntity ticketSummaryEntity = ticketSummaryService.mappingSummaryById(requestModel.getTicketId());
+        float prices = requestModel.getPrices();
+        if (prices == 0) {
+            prices = ticketSummaryEntity.getFare();
+        }
         VehicleSummaryEntity vehicleSummaryEntity;
         if (requestModel.getVehicleId() != null) {
             vehicleSummaryEntity = vehicleSummaryService.mappingSummaryById(requestModel.getVehicleId());
@@ -79,7 +83,15 @@ public class PaymentServiceImpl extends BaseService implements PaymentService {
         if (StringUtils.isEmpty(endDate)) {
             endDate = _prepareEndDate(ticketSummaryEntity, requestModel.getStartDate());
         }
-        PaymentEntity paymentEntity = PaymentEntity.builder().vehicle(vehicleSummaryEntity).ticket(ticketSummaryEntity).parkingArea(parkingAreaSummaryService.mappingSummaryById(requestModel.getParkingAreaId())).startDate(requestModel.getStartDate()).endDate(endDate).active(requestModel.isActive()).status(requestModel.getStatus()).build();
+        PaymentEntity paymentEntity = PaymentEntity.builder()
+                .vehicle(vehicleSummaryEntity)
+                .ticket(ticketSummaryEntity)
+                .parkingArea(parkingAreaSummaryService.mappingSummaryById(requestModel.getParkingAreaId()))
+                .startDate(requestModel.getStartDate())
+                .endDate(endDate)
+                .active(requestModel.isActive())
+                .prices(prices)
+                .status(requestModel.getStatus()).build();
         paymentRepository.save(paymentEntity);
 
         return paymentEntity.getId().toString();
@@ -168,10 +180,12 @@ public class PaymentServiceImpl extends BaseService implements PaymentService {
             if (Constant.TicketType.isDaily(ticketEntity.getType())) {
                 dailyTicket = ticketEntity;
             }
-            if (Constant.TicketType.isMonthly(ticketEntity.getType())) {
-                List<PaymentEntity> paymentEntities = paymentComplexRepository.findAvalabelByUser(username, parkingAreaId, ticketEntity.getId());
+            if (Constant.TicketType.isMonthly(ticketEntity.getType()) ||
+                    Constant.TicketType.isYearly(ticketEntity.getType())) {
+                List<PaymentEntity> paymentEntities =
+                        paymentComplexRepository.findValidPaymentByUser(username, parkingAreaId, ticketEntity.getId());
                 if (!CollectionUtils.isEmpty(paymentEntities)) {
-                    return PaymentInfoModel.builder().ticket(ticketEntity).isPass(true).build();
+                    return PaymentInfoModel.builder().payment(paymentEntities.get(0)).isPass(true).build();
                 }
             }
         }
@@ -182,6 +196,8 @@ public class PaymentServiceImpl extends BaseService implements PaymentService {
     private PaymentItemResponseModel _mappingPaymentData(PaymentEntity paymentEntity) {
         PaymentItemResponseModel paymentItemResponseModel = new PaymentItemResponseModel();
         paymentItemResponseModel.setId(paymentEntity.getId().toString());
+        paymentItemResponseModel.setPrices(paymentEntity.getPrices());
+
 
         TicketSummaryEntity ticket = paymentEntity.getTicket();
         if (ticket != null) {
@@ -196,12 +212,23 @@ public class PaymentServiceImpl extends BaseService implements PaymentService {
 
         String startDate = paymentEntity.getStartDate();
         if (!StringUtils.isEmpty(startDate)) {
-            paymentItemResponseModel.setStartDate(DateTimeUtils.convertDateTimeFormat(startDate, Constant.DateTimeFormat.YYYY_MM_DD_HH_MM_SS, Constant.DateTimeFormat.DD_MM_YYYY_HH_MM_SS));
+            paymentItemResponseModel.setStartDate(
+                    DateTimeUtils.convertDateTimeFormat(
+                            startDate,
+                            Constant.DateTimeFormat.YYYY_MM_DD_HH_MM_SS,
+                            Constant.DateTimeFormat.DD_MM_YYYY_HH_MM_SS)
+            );
         }
 
         String endDate = paymentEntity.getEndDate();
         if (!StringUtils.isEmpty(endDate)) {
-            paymentItemResponseModel.setEndDate(DateTimeUtils.convertDateTimeFormat(endDate, Constant.DateTimeFormat.YYYY_MM_DD_HH_MM_SS, Constant.DateTimeFormat.DD_MM_YYYY_HH_MM_SS));
+            paymentItemResponseModel.setEndDate(
+                    DateTimeUtils.convertDateTimeFormat(
+                            endDate,
+                            Constant.DateTimeFormat.YYYY_MM_DD_HH_MM_SS,
+                            Constant.DateTimeFormat.DD_MM_YYYY_HH_MM_SS
+                    )
+            );
         }
 
         ParkingAreaSummaryEntity parkingArea = paymentEntity.getParkingArea();

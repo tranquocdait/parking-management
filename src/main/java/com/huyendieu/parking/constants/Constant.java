@@ -150,6 +150,10 @@ public class Constant {
         public static boolean isMonthly(Integer key) {
             return findByKey(key) == MONTHLY;
         }
+
+        public static boolean isYearly(Integer key) {
+            return findByKey(key) == YEARLY;
+        }
     }
 
     public enum PaymentStatus {
