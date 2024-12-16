@@ -6,7 +6,6 @@ import com.huyendieu.parking.entities.VehicleEntity;
 import com.huyendieu.parking.model.request.PaymentRequestModel;
 import com.huyendieu.parking.model.request.SearchPaymentRequestModel;
 import com.huyendieu.parking.model.request.UpdatePaymentRequestModel;
-import com.huyendieu.parking.model.response.CheckParkingResponseModel;
 import com.huyendieu.parking.model.response.PaymentListResponseModel;
 import com.huyendieu.parking.model.response.base.ErrorResponseModel;
 import com.huyendieu.parking.model.response.base.SuccessfulResponseModel;
@@ -49,7 +48,7 @@ public class PaymentController {
                 ParkingAreaEntity parkingAreaEntity = parkingAreaRepository.findFirstByOwner(username);
                 requestModel.setParkingAreaId(parkingAreaEntity.getId().toString());
             } else {
-                VehicleEntity vehicleEntity = vehicleRepository.findByIdAndUsername(username);
+                VehicleEntity vehicleEntity = vehicleRepository.findByUsername(username);
                 requestModel.setVehicleId(vehicleEntity.getId().toString());
             }
             String startDate = requestModel.getStartDate();

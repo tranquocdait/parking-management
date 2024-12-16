@@ -2,14 +2,13 @@ package com.huyendieu.parking.services.impl;
 
 import com.huyendieu.parking.constants.Constant;
 import com.huyendieu.parking.constants.NotificationConstant;
-import com.huyendieu.parking.entities.ParkingAreaEntity;
-import com.huyendieu.parking.entities.ParkingHistoryEntity;
-import com.huyendieu.parking.entities.TicketEntity;
+import com.huyendieu.parking.entities.*;
 import com.huyendieu.parking.entities.summary.ParkingAreaSummaryEntity;
 import com.huyendieu.parking.entities.summary.PaymentSummaryEntity;
 import com.huyendieu.parking.entities.summary.VehicleSummaryEntity;
 import com.huyendieu.parking.exception.ParkingException;
 import com.huyendieu.parking.model.dto.PaymentInfoModel;
+import com.huyendieu.parking.model.request.CheckInWithOutPerRequestModel;
 import com.huyendieu.parking.model.request.PaymentRequestModel;
 import com.huyendieu.parking.model.response.CapacityResponseModel;
 import com.huyendieu.parking.model.response.CheckParkingResponseModel;
@@ -68,13 +67,26 @@ public class CheckingServiceImpl extends BaseService implements CheckingService 
 
 
     @Override
+    public CheckParkingResponseModel checkParkingWithOutPermission(CheckInWithOutPerRequestModel requestModel) throws ParkingException {
+        VehicleEntity vehicleEntity = vehicleRepository.findFirstByPlateNumber(requestModel.getPlateNumber());
+        UserEntity vehicleOwner = vehicleEntity.getOwner();
+        ParkingAreaEntity parkingAreaEntity = parkingAreaRepository.findFirstByOwner(requestModel.getUserName());
+        return _checkParking(vehicleOwner.getUserName(), parkingAreaEntity.getId().toString());
+    }
+
+    @Override
     public CheckParkingResponseModel checkParking(Authentication authentication, String parkingAreaId) throws ParkingException {
         if (!UserUtils.isVehicleRole(authentication)) {
             throw new ParkingException("authentication don't exist!");
         }
         String username = UserUtils.getUserName(authentication);
+        return _checkParking(username, parkingAreaId);
+    }
+
+
+    private CheckParkingResponseModel _checkParking(String usernameVehicle, String parkingAreaId) throws ParkingException {
         List<ParkingHistoryEntity> parkingHistoryEntities =
-                parkingHistoryRepository.findUserByNotCheckOut(username, new ObjectId(parkingAreaId));
+                parkingHistoryRepository.findUserByNotCheckOut(usernameVehicle, new ObjectId(parkingAreaId));
         CheckParkingResponseModel response = CheckParkingResponseModel.builder()
                 .parkingId(parkingAreaId)
                 .build();
@@ -84,7 +96,7 @@ public class CheckingServiceImpl extends BaseService implements CheckingService 
             // Check out
             checkParkingCode = Constant.CheckParkingCode.CHECK_OUT;
             parkingHistoryEntity = parkingHistoryEntities.get(0);
-            PaymentInfoModel paymentInfoModel = paymentService.isPassCheckout(username, parkingAreaId);
+            PaymentInfoModel paymentInfoModel = paymentService.isPassCheckout(usernameVehicle, parkingAreaId);
             if (paymentInfoModel != null) {
                 if (paymentInfoModel.isPass()) {
                     checkOut(parkingHistoryEntity);
@@ -101,7 +113,7 @@ public class CheckingServiceImpl extends BaseService implements CheckingService 
                         // Create Payment
                         PaymentRequestModel paymentModel = new PaymentRequestModel();
                         paymentModel.setParkingAreaId(parkingAreaId);
-                        paymentModel.setUsername(username);
+                        paymentModel.setUsername(usernameVehicle);
                         paymentModel.setTicketId(ticket.getId().toString());
                         paymentModel.setPrices(prices);
                         paymentModel.setStatus(Constant.PaymentStatus.WAITING.getKey());
@@ -135,7 +147,7 @@ public class CheckingServiceImpl extends BaseService implements CheckingService 
                         new Object[]{}, LocaleContextHolder.getLocale());
                 throw new ParkingException(messageError);
             }
-            parkingHistoryEntity = checkIn(parkingAreaId, username);
+            parkingHistoryEntity = checkIn(parkingAreaId, usernameVehicle);
             checkParkingCode = Constant.CheckParkingCode.CHECK_IN;
         }
 
