@@ -12,8 +12,10 @@ public interface VehicleRepository extends MongoRepository<VehicleEntity, String
 
     Optional<VehicleEntity> findFirstById(ObjectId id);
 
-    @Query("{ '_id': ?0, 'owner.user_name' : ?1}")
-    VehicleEntity findByIdAndUsername(ObjectId id, String userName);
+    @Query("{'owner.user_name' : ?0}")
+    VehicleEntity findByUsername(String userName);
+
+    VehicleEntity findFirstByPlateNumber(String plateNumber);
 
     @Query("{ 'owner.id' : ?0, 'is_disable': false }")
     List<VehicleEntity> findAllByOwnerId(ObjectId id);

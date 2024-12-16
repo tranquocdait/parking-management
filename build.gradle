@@ -50,10 +50,11 @@ dependencies {
 	// https://mvnrepository.com/artifact/com.google.zxing/core
 	implementation group: 'com.google.zxing', name: 'javase', version: '3.5.0'
 
+	// https://mvnrepository.com/artifact/org.projectlombok/lombok
+    compileOnly 'org.projectlombok:lombok:1.18.34'
 
-	compileOnly 'org.projectlombok:lombok'
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
-	annotationProcessor 'org.projectlombok:lombok'
+	annotationProcessor 'org.projectlombok:lombok:1.18.34'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 

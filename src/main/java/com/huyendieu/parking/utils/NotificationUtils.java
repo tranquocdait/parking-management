@@ -3,10 +3,11 @@ package com.huyendieu.parking.utils;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.huyendieu.parking.model.notification.NotificationModel;
+import com.huyendieu.parking.model.response.CheckParkingResponseModel;
 
 public class NotificationUtils {
 
-    public static void sendNotification(String path, NotificationModel data) {
+    public static void sendNotification(String path, CheckParkingResponseModel data) {
         DatabaseReference ref = FirebaseDatabase.getInstance()
                 .getReference(path);
         String pathChild = ref.push().getKey();

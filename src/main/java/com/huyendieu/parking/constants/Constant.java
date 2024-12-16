@@ -26,7 +26,8 @@ public class Constant {
     public enum CheckParkingCode {
 
         CHECK_IN(1, "CHECK_IN", "Check in successful."),
-        CHECK_OUT(2, "CHECK_OUT", "Check out successful.");
+        CHECK_OUT(2, "CHECK_OUT", "Check out successful."),
+        WAITING_PAYMENT(3, "WAITING", "Waiting payment.");
 
         private final Integer key;
 
@@ -103,7 +104,7 @@ public class Constant {
         FREE(1, "FREE", "Free ticket"),
         MONTHLY(2, "MONTHLY", "Monthly ticket"),
         YEARLY(3, "YEARLY", "Yearly ticket"),
-        ONE_TIME(4, "ONE_TIME", "One time ticket");
+        DAILY(4, "DAILY", "Daily ticket");
 
         private final Integer key;
 
@@ -133,6 +134,61 @@ public class Constant {
             for (TicketType ticket : values()) {
                 if (Objects.equals(ticket.key, key)) {
                     return ticket;
+                }
+            }
+            return null;
+        }
+
+        public static boolean isDaily(Integer key) {
+            return findByKey(key) == DAILY;
+        }
+
+        public static boolean isFree(Integer key) {
+            return findByKey(key) == FREE;
+        }
+
+        public static boolean isMonthly(Integer key) {
+            return findByKey(key) == MONTHLY;
+        }
+
+        public static boolean isYearly(Integer key) {
+            return findByKey(key) == YEARLY;
+        }
+    }
+
+    public enum PaymentStatus {
+        NONE(0, "None", "None"),
+        WAITING(1, "WAITING", "Waiting for payment"),
+        DONE(2, "Done", "Done payment");
+
+        private final Integer key;
+
+        private final String code;
+
+        private final String value;
+
+        PaymentStatus(Integer key, String code, String value) {
+            this.key = key;
+            this.code = code;
+            this.value = value;
+        }
+
+        public Integer getKey() {
+            return key;
+        }
+
+        public String getCode() {
+            return code;
+        }
+
+        public String getValue() {
+            return value;
+        }
+
+        public static PaymentStatus findByKey(Integer key) {
+            for (PaymentStatus paymentStatus : values()) {
+                if (Objects.equals(paymentStatus.key, key)) {
+                    return paymentStatus;
                 }
             }
             return null;

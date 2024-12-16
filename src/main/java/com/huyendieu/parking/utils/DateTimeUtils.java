@@ -73,4 +73,16 @@ public class DateTimeUtils {
             throw new ParkingException(ex.getMessage());
         }
     }
+
+    public static LocalDateTime convertStringToDateTime(String date, String formatFrom) throws ParkingException {
+        if (StringUtils.isEmpty(date)) {
+            throw new ParkingException("date is not null");
+        }
+        try {
+            DateTimeFormatter formatterFrom = DateTimeFormatter.ofPattern(formatFrom);
+            return LocalDateTime.parse(date, formatterFrom);
+        } catch (Exception ex) {
+            throw new ParkingException(ex.getMessage());
+        }
+    }
 }

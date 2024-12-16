@@ -28,5 +28,7 @@ public interface ParkingAreaService {
     CapacityResponseModel getCapacityInformation(Authentication authentication) throws ParkingException;
 
     CapacityResponseModel getCapacityByParkingArea(ParkingAreaEntity parkingAreaEntity);
+
+    DashboardResponseModel incomeStatistics(Authentication authentication, DashboardRequestModel requestModel) throws ParkingException;
 }
 	

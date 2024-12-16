@@ -19,8 +19,8 @@ public class TicketSummaryServiceImpl implements TicketSummaryService {
     private TicketRepository ticketRepository;
 
     @Override
-    public TicketSummaryEntity mappingSummaryById(String vehicleId) throws ParkingException {
-        Optional<TicketEntity> optionalTicket = ticketRepository.findFirstById(new ObjectId(vehicleId));
+    public TicketSummaryEntity mappingSummaryById(String ticketId) throws ParkingException {
+        Optional<TicketEntity> optionalTicket = ticketRepository.findFirstById(new ObjectId(ticketId));
         if (optionalTicket.isEmpty()) {
             return null;
         }

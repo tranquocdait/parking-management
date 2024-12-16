@@ -9,12 +9,11 @@ import com.huyendieu.parking.entities.summary.VehicleSummaryEntity;
 import com.huyendieu.parking.exception.ParkingException;
 import com.huyendieu.parking.model.request.ParkingRegistrationRequestModel;
 import com.huyendieu.parking.model.request.TrackingParkingRequestModel;
-import com.huyendieu.parking.model.response.QRCodeResponseModel;
-import com.huyendieu.parking.model.response.TrackingVehicleItemResponseModel;
-import com.huyendieu.parking.model.response.TrackingVehicleResponseModel;
+import com.huyendieu.parking.model.response.*;
 import com.huyendieu.parking.repositories.ParkingAreaRepository;
 import com.huyendieu.parking.repositories.VehicleRepository;
 import com.huyendieu.parking.repositories.complex.VehicleComplexRepository;
+import com.huyendieu.parking.services.ParkingAreaService;
 import com.huyendieu.parking.services.VehicleService;
 import com.huyendieu.parking.services.base.BaseService;
 import com.huyendieu.parking.utils.*;
@@ -40,6 +39,9 @@ public class VehicleServiceImpl extends BaseService implements VehicleService {
     @Autowired
     private VehicleComplexRepository vehicleComplexRepository;
 
+    @Autowired
+    private ParkingAreaService parkingAreaService;
+
     @Override
     public QRCodeResponseModel generateQR(String username) throws ParkingException {
         List<VehicleEntity> vehicleEntities = vehicleRepository.findAllByActiveIsTrue(username);
@@ -61,7 +63,7 @@ public class VehicleServiceImpl extends BaseService implements VehicleService {
         String parkingAreaId = requestModel.getParkingAreaId();
         int status = requestModel.getStatus();
         Optional<ParkingAreaEntity> parkingAreaEntityOptional = parkingAreaRepository.findFistById(new ObjectId(parkingAreaId));
-        if (!parkingAreaEntityOptional.isPresent()) {
+        if (parkingAreaEntityOptional.isEmpty()) {
             throw new ParkingException("Parking area don't exist!");
         }
         ParkingAreaEntity parkingAreaEntity = parkingAreaEntityOptional.get();
@@ -116,6 +118,39 @@ public class VehicleServiceImpl extends BaseService implements VehicleService {
                 .dataList(trackingVehicleItemResponseModels)
                 .totalRecord(totalRecord)
                 .build();
+    }
+
+    @Override
+    public CapacityResponseModel getParkingCapacity(String parkingId) throws ParkingException {
+        Optional<ParkingAreaEntity> parkingAreaOptional = parkingAreaRepository.findFistById(new ObjectId(parkingId));
+        if (parkingAreaOptional.isPresent()) {
+            ParkingAreaEntity parkingAreaEntity = parkingAreaOptional.get();
+            CapacityResponseModel responseModel =
+                    parkingAreaService.getCapacityByParkingArea(parkingAreaEntity);
+            return responseModel;
+        }
+        throw new ParkingException("Parking area don't exist!");
+    }
+
+    @Override
+    public ParkingAreaListResponseModel getParkingAreas() {
+        List<ParkingAreaEntity> parkingAreaEntities = parkingAreaRepository.findAll();
+        List<ParkingAreaResponseModel> dataList = new ArrayList<>();
+        if (!CollectionUtils.isEmpty(parkingAreaEntities)) {
+            for (ParkingAreaEntity parkingAreaEntity : parkingAreaEntities) {
+                dataList.add(mappingParkingArea(parkingAreaEntity));
+            }
+        }
+        return ParkingAreaListResponseModel.builder()
+                .dataList(dataList)
+                .totalRecord(dataList.size())
+                .build();
+    }
+
+    private ParkingAreaResponseModel mappingParkingArea(ParkingAreaEntity parkingAreaEntity) {
+        return parkingAreaEntity != null
+                ? MapperUtils.map(parkingAreaEntity, ParkingAreaResponseModel.class)
+                : new ParkingAreaResponseModel();
     }
 
     private TrackingVehicleItemResponseModel mappingHistoryData(ParkingHistoryEntity entity) {

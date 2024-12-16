@@ -3,6 +3,8 @@ package com.huyendieu.parking.controllers;
 import com.huyendieu.parking.constants.Constant;
 import com.huyendieu.parking.model.request.ParkingRegistrationRequestModel;
 import com.huyendieu.parking.model.request.TrackingParkingRequestModel;
+import com.huyendieu.parking.model.response.CapacityResponseModel;
+import com.huyendieu.parking.model.response.ParkingAreaListResponseModel;
 import com.huyendieu.parking.model.response.TrackingVehicleResponseModel;
 import com.huyendieu.parking.model.response.base.ErrorResponseModel;
 import com.huyendieu.parking.model.response.base.SuccessfulResponseModel;
@@ -11,10 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -49,6 +48,30 @@ public class VehicleManagementController {
             TrackingVehicleResponseModel responseModel =
                     vehicleService.trackingManage(authentication, requestModel);
             return new ResponseEntity(new SuccessfulResponseModel(responseModel), HttpStatus.OK);
+        } catch (Exception ex) {
+            Map<String, String> errors = new HashMap<>();
+            errors.put("message", ex.getMessage());
+            return new ResponseEntity(new ErrorResponseModel(errors), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @GetMapping("/parking/parking-capacity/{parking_id}")
+    public ResponseEntity<?> getParkingCapacity(@PathVariable("parking_id") String parkingId) {
+        try {
+            CapacityResponseModel parkingCapacity = vehicleService.getParkingCapacity(parkingId);
+            return new ResponseEntity(new SuccessfulResponseModel(parkingCapacity), HttpStatus.OK);
+        } catch (Exception ex) {
+            Map<String, String> errors = new HashMap<>();
+            errors.put("message", ex.getMessage());
+            return new ResponseEntity(new ErrorResponseModel(errors), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @GetMapping("/parking")
+    public ResponseEntity<?> getParkingAreas() {
+        try {
+            ParkingAreaListResponseModel parkingCapacity = vehicleService.getParkingAreas();
+            return new ResponseEntity(new SuccessfulResponseModel(parkingCapacity), HttpStatus.OK);
         } catch (Exception ex) {
             Map<String, String> errors = new HashMap<>();
             errors.put("message", ex.getMessage());

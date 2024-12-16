@@ -32,7 +32,7 @@ public class UserController {
     private UserService userService;
 
 	@PostMapping("/sign-in")
-	public ResponseEntity<?> createUser(@Valid @RequestBody SignInRequestModel requestModel, HttpServletRequest request) {
+	public ResponseEntity<?> signInUser(@Valid @RequestBody SignInRequestModel requestModel, HttpServletRequest request) {
 		try {
 			RestTemplate restTemplate = new RestTemplate();
 			String uri = request.getRequestURL().substring(0, request.getRequestURL().indexOf(request.getRequestURI()));
