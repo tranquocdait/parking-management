@@ -147,6 +147,18 @@ public class VehicleServiceImpl extends BaseService implements VehicleService {
                 .build();
     }
 
+    @Override
+    public void shortedPlateNumber() {
+        List<VehicleEntity> vehicleEntities = vehicleRepository.findAll();
+        for (VehicleEntity vehicleEntity : vehicleEntities) {
+            vehicleEntity.setShortedPlateNumber(
+                    PlateNumberUtils.shortedPlateNumber(vehicleEntity.getPlateNumber())
+            );
+        }
+
+        vehicleRepository.saveAll(vehicleEntities);
+    }
+
     private ParkingAreaResponseModel mappingParkingArea(ParkingAreaEntity parkingAreaEntity) {
         return parkingAreaEntity != null
                 ? MapperUtils.map(parkingAreaEntity, ParkingAreaResponseModel.class)

@@ -19,6 +19,7 @@ import com.huyendieu.parking.services.UserService;
 import com.huyendieu.parking.services.base.BaseService;
 import com.huyendieu.parking.utils.DateTimeUtils;
 import com.huyendieu.parking.utils.MapperUtils;
+import com.huyendieu.parking.utils.PlateNumberUtils;
 import com.huyendieu.parking.utils.UserUtils;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -140,6 +141,7 @@ public class UserServiceImpl extends BaseService implements UserService {
         try {
             VehicleEntity vehicleEntity = VehicleEntity.builder()
                     .plateNumber(requestModel.getPlateNumber())
+                    .shortedPlateNumber(PlateNumberUtils.shortedPlateNumber(requestModel.getPlateNumber()))
                     .vehicleModel(requestModel.getVehicleModel())
                     .vehicleModel(requestModel.getVehicleModel())
                     .vehicleBrand(requestModel.getVehicleBrand())

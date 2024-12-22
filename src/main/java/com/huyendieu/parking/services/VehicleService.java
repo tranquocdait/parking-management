@@ -20,4 +20,6 @@ public interface VehicleService {
     CapacityResponseModel getParkingCapacity(String parkingId) throws ParkingException;
 
     ParkingAreaListResponseModel getParkingAreas();
+
+    void shortedPlateNumber();
 }

@@ -21,6 +21,9 @@ public class VehicleEntity extends BaseEntity {
     @Field(name = "plate_number")
     private String plateNumber;
 
+    @Field(name = "shorted_plate_number")
+    private String shortedPlateNumber;
+
     @Field(name = "vehicle_model")
     private String vehicleModel;
 

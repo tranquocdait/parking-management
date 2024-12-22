@@ -5,6 +5,7 @@ import java.util.Map;
 
 import com.huyendieu.parking.model.request.CheckInWithOutPerRequestModel;
 import com.huyendieu.parking.model.request.SignInRequestModel;
+import com.huyendieu.parking.utils.UserUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -36,9 +37,28 @@ public class CheckingController {
         }
     }
 
-    @PostMapping("without_permission")
+    @PostMapping("without-permission")
     public ResponseEntity<?> checkParkingWithOutPermission(@Valid @RequestBody CheckInWithOutPerRequestModel requestModel) {
         try {
+            CheckParkingResponseModel checkParkingResponseModel =
+                    paymentService.checkParkingWithOutPermission(requestModel);
+            return new ResponseEntity<>(new SuccessfulResponseModel(checkParkingResponseModel), HttpStatus.OK);
+        } catch (Exception ex) {
+            Map<String, String> errors = new HashMap<>();
+            errors.put("message", ex.getMessage());
+            return new ResponseEntity<>(new ErrorResponseModel(errors), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @GetMapping("parking-area/{shorted_plate_number}")
+    public ResponseEntity<?> checkParkingArea(Authentication authentication,
+            @PathVariable("shorted_plate_number") String shortedPlateNumber) {
+        try {
+            System.out.println("shortedPlateNumber" + shortedPlateNumber);
+            String userName = UserUtils.getUserName(authentication);
+            CheckInWithOutPerRequestModel requestModel = new CheckInWithOutPerRequestModel();
+            requestModel.setShortedPlateNumber(shortedPlateNumber);
+            requestModel.setUserName(userName);
             CheckParkingResponseModel checkParkingResponseModel =
                     paymentService.checkParkingWithOutPermission(requestModel);
             return new ResponseEntity<>(new SuccessfulResponseModel(checkParkingResponseModel), HttpStatus.OK);

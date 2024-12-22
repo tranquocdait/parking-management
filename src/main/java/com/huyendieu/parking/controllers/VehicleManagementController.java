@@ -78,4 +78,16 @@ public class VehicleManagementController {
             return new ResponseEntity(new ErrorResponseModel(errors), HttpStatus.BAD_REQUEST);
         }
     }
+
+    @GetMapping("/shorted-plate-number")
+    public ResponseEntity<?> shortedPlateNumber() {
+        try {
+            vehicleService.shortedPlateNumber();
+            return new ResponseEntity(new SuccessfulResponseModel(), HttpStatus.OK);
+        } catch (Exception ex) {
+            Map<String, String> errors = new HashMap<>();
+            errors.put("message", ex.getMessage());
+            return new ResponseEntity(new ErrorResponseModel(errors), HttpStatus.BAD_REQUEST);
+        }
+    }
 }

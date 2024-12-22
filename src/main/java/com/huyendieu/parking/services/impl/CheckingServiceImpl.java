@@ -68,7 +68,16 @@ public class CheckingServiceImpl extends BaseService implements CheckingService 
 
     @Override
     public CheckParkingResponseModel checkParkingWithOutPermission(CheckInWithOutPerRequestModel requestModel) throws ParkingException {
-        VehicleEntity vehicleEntity = vehicleRepository.findFirstByPlateNumber(requestModel.getPlateNumber());
+        Optional<VehicleEntity> vehicleOptional =
+                vehicleRepository.findFirstByShortedPlateNumber(requestModel.getShortedPlateNumber());
+        if (vehicleOptional.isEmpty()) {
+//            throw new ParkingException("Plate number don't exist!");
+            return CheckParkingResponseModel.builder()
+                    .checkType("DONT_EXIST")
+                    .message("Plate number don't exist!")
+                    .build();
+        }
+        VehicleEntity vehicleEntity = vehicleOptional.get();
         UserEntity vehicleOwner = vehicleEntity.getOwner();
         ParkingAreaEntity parkingAreaEntity = parkingAreaRepository.findFirstByOwner(requestModel.getUserName());
         return _checkParking(vehicleOwner.getUserName(), parkingAreaEntity.getId().toString());

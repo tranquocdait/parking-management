@@ -13,6 +13,6 @@ public class CheckInWithOutPerRequestModel {
     @JsonProperty("user_name")
     private String userName;
 
-    @JsonProperty("plate_number")
-    private String plateNumber;
+    @JsonProperty("shorted_plate_number")
+    private String shortedPlateNumber;
 }
