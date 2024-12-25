@@ -8,11 +8,11 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class CheckInWithOutPerRequestModel {
-
-    @JsonProperty("user_name")
-    private String userName;
+public class CheckInByParkingAreaRequestModel {
 
     @JsonProperty("shorted_plate_number")
     private String shortedPlateNumber;
+
+    @JsonProperty("image")
+    private String imageBase64;
 }

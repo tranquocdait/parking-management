@@ -34,4 +34,10 @@ public class ParkingHistoryEntity extends BaseEntity {
 
     @Field(name = "payment")
     private PaymentSummaryEntity payment;
+
+    @Field(name = "check_in_url")
+    private String checkInUrl;
+
+    @Field(name = "check_out_url")
+    private String checkOutUrl;
 }

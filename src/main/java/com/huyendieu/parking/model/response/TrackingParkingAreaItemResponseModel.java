@@ -25,4 +25,10 @@ public class TrackingParkingAreaItemResponseModel {
 
     @JsonProperty("vehicle_owner")
     private String vehicleOwner;
+
+    @JsonProperty("check_in_url")
+    private String checkInUrl;
+
+    @JsonProperty("check_out_url")
+    private String checkOutUrl;
 }

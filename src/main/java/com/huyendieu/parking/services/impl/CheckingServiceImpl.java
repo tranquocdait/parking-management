@@ -8,7 +8,7 @@ import com.huyendieu.parking.entities.summary.PaymentSummaryEntity;
 import com.huyendieu.parking.entities.summary.VehicleSummaryEntity;
 import com.huyendieu.parking.exception.ParkingException;
 import com.huyendieu.parking.model.dto.PaymentInfoModel;
-import com.huyendieu.parking.model.request.CheckInWithOutPerRequestModel;
+import com.huyendieu.parking.model.request.CheckInByParkingAreaRequestModel;
 import com.huyendieu.parking.model.request.PaymentRequestModel;
 import com.huyendieu.parking.model.response.CapacityResponseModel;
 import com.huyendieu.parking.model.response.CheckParkingResponseModel;
@@ -18,6 +18,7 @@ import com.huyendieu.parking.repositories.VehicleRepository;
 import com.huyendieu.parking.services.CheckingService;
 import com.huyendieu.parking.services.ParkingAreaService;
 import com.huyendieu.parking.services.PaymentService;
+import com.huyendieu.parking.services.StorageService;
 import com.huyendieu.parking.services.base.BaseService;
 import com.huyendieu.parking.services.common.ParkingAreaSummaryService;
 import com.huyendieu.parking.services.common.VehicleSummaryService;
@@ -65,13 +66,16 @@ public class CheckingServiceImpl extends BaseService implements CheckingService 
     @Autowired
     private PaymentService paymentService;
 
+    @Autowired
+    StorageService storageService;
 
     @Override
-    public CheckParkingResponseModel checkParkingWithOutPermission(CheckInWithOutPerRequestModel requestModel) throws ParkingException {
+    public CheckParkingResponseModel checkParkingByParkingArea(Authentication authentication,
+            CheckInByParkingAreaRequestModel requestModel) throws ParkingException {
+        String userName = UserUtils.getUserName(authentication);
         Optional<VehicleEntity> vehicleOptional =
                 vehicleRepository.findFirstByShortedPlateNumber(requestModel.getShortedPlateNumber());
         if (vehicleOptional.isEmpty()) {
-//            throw new ParkingException("Plate number don't exist!");
             return CheckParkingResponseModel.builder()
                     .checkType("DONT_EXIST")
                     .message("Plate number don't exist!")
@@ -79,8 +83,8 @@ public class CheckingServiceImpl extends BaseService implements CheckingService 
         }
         VehicleEntity vehicleEntity = vehicleOptional.get();
         UserEntity vehicleOwner = vehicleEntity.getOwner();
-        ParkingAreaEntity parkingAreaEntity = parkingAreaRepository.findFirstByOwner(requestModel.getUserName());
-        return _checkParking(vehicleOwner.getUserName(), parkingAreaEntity.getId().toString());
+        ParkingAreaEntity parkingAreaEntity = parkingAreaRepository.findFirstByOwner(userName);
+        return _checkParking(vehicleOwner.getUserName(), parkingAreaEntity.getId().toString(), requestModel.getImageBase64());
     }
 
     @Override
@@ -89,11 +93,11 @@ public class CheckingServiceImpl extends BaseService implements CheckingService 
             throw new ParkingException("authentication don't exist!");
         }
         String username = UserUtils.getUserName(authentication);
-        return _checkParking(username, parkingAreaId);
+        return _checkParking(username, parkingAreaId, null);
     }
 
 
-    private CheckParkingResponseModel _checkParking(String usernameVehicle, String parkingAreaId) throws ParkingException {
+    private CheckParkingResponseModel _checkParking(String usernameVehicle, String parkingAreaId, String imageBase64) throws ParkingException {
         List<ParkingHistoryEntity> parkingHistoryEntities =
                 parkingHistoryRepository.findUserByNotCheckOut(usernameVehicle, new ObjectId(parkingAreaId));
         CheckParkingResponseModel response = CheckParkingResponseModel.builder()
@@ -108,7 +112,7 @@ public class CheckingServiceImpl extends BaseService implements CheckingService 
             PaymentInfoModel paymentInfoModel = paymentService.isPassCheckout(usernameVehicle, parkingAreaId);
             if (paymentInfoModel != null) {
                 if (paymentInfoModel.isPass()) {
-                    checkOut(parkingHistoryEntity);
+                    checkOut(parkingHistoryEntity, imageBase64);
                 } else {
                     // Waiting For Payment
                     TicketEntity ticket = paymentInfoModel.getTicket();
@@ -118,25 +122,29 @@ public class CheckingServiceImpl extends BaseService implements CheckingService 
                         float prices = calculatePrices(ticket, checkInDate);
                         response.setPrices(prices);
                         String checkoutDate = currentDate();
+                        String paymentId;
+                        if (parkingHistoryEntity.getPayment() == null) {
+                            // Create Payment
+                            PaymentRequestModel paymentModel = new PaymentRequestModel();
+                            paymentModel.setParkingAreaId(parkingAreaId);
+                            paymentModel.setUsername(usernameVehicle);
+                            paymentModel.setTicketId(ticket.getId().toString());
+                            paymentModel.setPrices(prices);
+                            paymentModel.setStatus(Constant.PaymentStatus.WAITING.getKey());
+                            paymentModel.setActive(true);
+                            paymentModel.setStartDate(parkingHistoryEntity.getCheckInDate());
+                            paymentModel.setEndDate(checkoutDate);
+                            paymentId = paymentService.create(paymentModel);
 
-                        // Create Payment
-                        PaymentRequestModel paymentModel = new PaymentRequestModel();
-                        paymentModel.setParkingAreaId(parkingAreaId);
-                        paymentModel.setUsername(usernameVehicle);
-                        paymentModel.setTicketId(ticket.getId().toString());
-                        paymentModel.setPrices(prices);
-                        paymentModel.setStatus(Constant.PaymentStatus.WAITING.getKey());
-                        paymentModel.setActive(true);
-                        paymentModel.setStartDate(parkingHistoryEntity.getCheckInDate());
-                        paymentModel.setEndDate(checkoutDate);
-                        String paymentId = paymentService.create(paymentModel);
-
-                        PaymentSummaryEntity paymentSummaryEntity = PaymentSummaryEntity.builder()
-                                .id(new ObjectId(paymentId))
-                                .prices(prices)
-                                .build();
-                        parkingHistoryEntity.setPayment(paymentSummaryEntity);
-                        parkingHistoryRepository.save(parkingHistoryEntity);
+                            PaymentSummaryEntity paymentSummaryEntity = PaymentSummaryEntity.builder()
+                                    .id(new ObjectId(paymentId))
+                                    .prices(prices)
+                                    .build();
+                            payment(parkingHistoryEntity, paymentSummaryEntity, imageBase64);
+                        } else {
+                            PaymentSummaryEntity paymentSummaryEntity = parkingHistoryEntity.getPayment();
+                            paymentId = paymentSummaryEntity.getId().toString();
+                        }
 
                         response.setPaymentId(paymentId);
                         response.setCheckOutDate(
@@ -156,7 +164,7 @@ public class CheckingServiceImpl extends BaseService implements CheckingService 
                         new Object[]{}, LocaleContextHolder.getLocale());
                 throw new ParkingException(messageError);
             }
-            parkingHistoryEntity = checkIn(parkingAreaId, usernameVehicle);
+            parkingHistoryEntity = checkIn(parkingAreaId, usernameVehicle, imageBase64);
             checkParkingCode = Constant.CheckParkingCode.CHECK_IN;
         }
 
@@ -201,12 +209,17 @@ public class CheckingServiceImpl extends BaseService implements CheckingService 
         return capacityInformation.getOccupation() <= capacityInformation.getCapacity();
     }
 
-    private ParkingHistoryEntity checkIn(String parkingAreaId, String username) throws ParkingException {
+    private ParkingHistoryEntity checkIn(String parkingAreaId, String username, String checkInBase64) throws ParkingException {
         ParkingAreaSummaryEntity parkingArea = parkingAreaSummaryService.mappingSummaryById(parkingAreaId);
         VehicleSummaryEntity vehicle = vehicleSummaryService.mappingSummaryByUsername(username);
+        String checkInUrl = "";
+        if (!StringUtils.isEmpty(checkInBase64)) {
+            checkInUrl = storageService.store(checkInBase64);
+        }
         ParkingHistoryEntity parkingHistoryEntity = ParkingHistoryEntity.builder()
                 .checkInDate(currentDate())
                 .vehicle(vehicle)
+                .checkInUrl(checkInUrl)
                 .parkingArea(parkingArea)
                 .createdDate(currentDate())
                 .createdBy(getClass().getSimpleName())
@@ -216,10 +229,26 @@ public class CheckingServiceImpl extends BaseService implements CheckingService 
         return parkingHistoryEntity;
     }
 
-    private void checkOut(ParkingHistoryEntity parkingHistoryEntity) throws ParkingException {
+    private void checkOut(ParkingHistoryEntity parkingHistoryEntity, String checkOutBase64) throws ParkingException {
+        String checkOutUrl = "";
+        if (!StringUtils.isEmpty(checkOutBase64)) {
+            checkOutUrl = storageService.store(checkOutBase64);
+        }
+        parkingHistoryEntity.setCheckOutUrl(checkOutUrl);
         parkingHistoryEntity.setCheckOutDate(currentDate());
         parkingHistoryEntity.setUpdatedDate(currentDate());
         parkingHistoryEntity.setUpdatedBy(getClass().getSimpleName());
+        parkingHistoryRepository.save(parkingHistoryEntity);
+    }
+
+    private void payment(ParkingHistoryEntity parkingHistoryEntity, PaymentSummaryEntity paymentSummaryEntity,
+            String checkOutBase64) throws ParkingException {
+        String checkOutUrl = "";
+        if (!StringUtils.isEmpty(checkOutBase64)) {
+            checkOutUrl = storageService.store(checkOutBase64);
+        }
+        parkingHistoryEntity.setCheckOutUrl(checkOutUrl);
+        parkingHistoryEntity.setPayment(paymentSummaryEntity);
         parkingHistoryRepository.save(parkingHistoryEntity);
     }
 

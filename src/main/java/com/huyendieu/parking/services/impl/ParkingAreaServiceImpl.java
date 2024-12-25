@@ -428,6 +428,8 @@ public class ParkingAreaServiceImpl extends BaseService implements ParkingAreaSe
                         Constant.DateTimeFormat.YYYY_MM_DD_HH_MM_SS,
                         Constant.DateTimeFormat.DD_MM_YYYY_HH_MM_SS
                 ))
+                .checkInUrl(entity.getCheckInUrl())
+                .checkOutUrl(entity.getCheckOutUrl())
                 .build();
 
         VehicleSummaryEntity vehicleSummaryEntity = entity.getVehicle();
