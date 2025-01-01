@@ -22,7 +22,7 @@ public class StorageServiceImpl implements StorageService {
             return result.get("secure_url");
 
         } catch (IOException e) {
-            throw new RuntimeException("Error");
+            return "";
         }
     }
 
